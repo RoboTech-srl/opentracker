@@ -1,14 +1,14 @@
 //collect and send GPS data for sending
 
 void data_append_char(char c) {
-  if (data_index < sizeof(data_current) - 1) {
+  if (data_index < DATA_LIMIT) {
     data_current[data_index++] = c;
     data_current[data_index] = 0;
   }
 }
 
 void data_append_string(const char *str) {
-  while (*str != 0 && data_index < sizeof(data_current) - 1)
+  while (*str != 0 && data_index < DATA_LIMIT)
     data_current[data_index++] = *str++;
   data_current[data_index] = 0;
 }
