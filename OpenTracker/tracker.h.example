@@ -83,12 +83,11 @@
 #define CONNECT_TIMEOUT 15000         //how much time to wait for each connection attempt
 
 #define STORAGE 1                     //save logs in flash storage
-#define STORAGE_FIRST_RUN_PAGE 0      //flash index to store flag for first run - very first page
-#define STORAGE_CONFIG_PAGE 1         //flash index to store configuration - just after FIRST_RUN page
+#define STORAGE_CONFIG_MAIN 0         //flash index to store configuration
 #define STORAGE_CONFIG_ADDON 512      //flash index to store addon configuration
-#define STORAGE_DATA_START 1024       //starting flash index to store logs (first bytes reserved for configuration)
+#define STORAGE_DATA_START 2048       //starting flash index to store logs (first bytes reserved for configuration)
 #define STORAGE_DATA_END 131071       //the last possible flash index (max 131072, one last byte must be reserved for marker)
-//#define STORAGE_DATA_END 2048       //the last possible flash index (max 131072, one last byte must be reserved for marker)
+//#define STORAGE_DATA_END 4096       //the last possible flash index (max 131072, one last byte must be reserved for marker)
 
 #define STORAGE_MAX_SEND_OLD  5       //maximum number of old data to send from log
 
