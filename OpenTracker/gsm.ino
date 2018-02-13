@@ -221,7 +221,7 @@ void gsm_wait_modem_ready(int timeout) {
     if(pas==0 || pas==3 || pas==4) break;
     status_delay(3000);
   }
-  while (millis() - t < timeout);
+  while ((long)(millis() - t) < timeout);
 }
 
 bool gsm_clock_was_set = false;
@@ -1043,7 +1043,7 @@ int gsm_read_line(int index = 0) {
     if(gsm_port.available()) {
       inChar = gsm_port.read(); // always read if available
       last = millis();
-      if(index < sizeof(modem_reply)-1) { // One less than the size of the array
+      if(index < (int)sizeof(modem_reply)-1) { // One less than the size of the array
         modem_reply[index] = inChar; // Store it
         index++; // Increment where to write next
   
@@ -1069,7 +1069,7 @@ void gsm_get_reply(int fullBuffer) {
       index = end;
     else
       break;
-  } while(fullBuffer && index < sizeof(modem_reply)-1);
+  } while(fullBuffer && index < (int)sizeof(modem_reply)-1);
   
   if(index > 0) {
     debug_print(F("Modem Reply:"));
@@ -1115,7 +1115,7 @@ void gsm_wait_for_reply(int allowOK, int fullBuffer, int maxseconds) {
     } else {
       status_delay(50);
     }
-  } while(index < sizeof(modem_reply)-1);
+  } while(index < (int)sizeof(modem_reply)-1);
   
   if (ret == 0) {
     debug_print(F("Warning: timed out waiting for last modem reply"));
@@ -1140,7 +1140,7 @@ void gsm_wait_for_reply(int allowOK, int fullBuffer, int maxseconds) {
 }
 
 int gsm_is_final_result(const char* reply, int allowOK) {
-  int reply_len = strlen(reply);
+  unsigned int reply_len = strlen(reply);
   // debug_print(allowOK);
   // debug_print(reply_len);
     
