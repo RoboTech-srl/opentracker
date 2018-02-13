@@ -86,7 +86,7 @@ void collect_gps_data() {
   char tmp[15];
 
   float flat, flon;
-  unsigned long age_pos, age_time, time_gps, date_gps, speed, course, alt;
+  unsigned long age_pos, age_time, time_gps, date_gps;
   unsigned long chars;
   unsigned short sentences, failed_checksum;
 
@@ -163,7 +163,7 @@ void collect_gps_data() {
         }
 #endif
 #if DATA_INCLUDE_HDOP
-        long hdop = gps.hdop(); //hdop
+        unsigned long hdop = gps.hdop(); //hdop
         
         if(hdop == TinyGPS::GPS_INVALID_HDOP) {
           debug_print(F("Invalid HDOP, retrying."));

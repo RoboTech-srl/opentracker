@@ -89,7 +89,7 @@ void sms_check() {
 }
 
 void sms_cmd(char *msg, char *phone) {
-  char *tmp, *tmp1;
+  char *tmp;
   int i=0;
 
   debug_print(F("sms_cmd() started"));

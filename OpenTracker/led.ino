@@ -6,7 +6,7 @@ int led_interval = 1000; //interval at which to blink status led (milliseconds)
 void status_led() {
   //blink led
   unsigned long currentMillis = millis();
-  if(currentMillis - previousMillis > led_interval) {
+  if((long)(currentMillis - previousMillis) > led_interval) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
 

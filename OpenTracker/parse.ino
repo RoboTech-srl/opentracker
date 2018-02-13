@@ -3,12 +3,11 @@
 int parse_receive_reply() {
   //receive reply from modem and parse it
   int ret = 0;
-  int len = 0;
+  unsigned int len = 0;
   byte header = 0;
   int resp_code = 0;
 
   char *tmp;
-  char *tmpcmd;
   char cmd[100] = "";  //remote commands stored here
 
   debug_print(F("parse_receive_reply() started"));
