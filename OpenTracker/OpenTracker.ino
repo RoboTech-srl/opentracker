@@ -86,6 +86,9 @@ void setup() {
   //common hardware initialization
   device_init();
   
+  debug_port.begin(115200);
+  delay(2000);
+
   //initialize GSM and GPS hardware
   gsm_init();
   gps_init();
@@ -94,8 +97,6 @@ void setup() {
   addon_init();
 
   //setting debug serial port
-  debug_port.begin(9600);
-  delay(2000);
   debug_print(F("setup() started"));
 
   //blink software start
