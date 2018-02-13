@@ -23,6 +23,10 @@ void storage_save_current() {
 void storage_get_index() {
   //storage_dump();
   debug_print(F("storage_get_index() started"));
+  debug_port.print("storage start: 0x");
+  debug_port.println(FLASH_STORAGE_START, HEX);
+  debug_port.print("storage size: ");
+  debug_port.println(FLASH_STORAGE_SIZE);
 
   //scan flash for current log position (new log writes will continue from there)
   byte *tmp = dueFlashStorage.readAddress(STORAGE_DATA_START);
