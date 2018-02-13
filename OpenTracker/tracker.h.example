@@ -81,6 +81,7 @@
 
 #define CONNECT_RETRY 3               //how many times to retry connecting to remote server
 #define CONNECT_TIMEOUT 15000         //how much time to wait for each connection attempt
+#define SERVER_REPLY_TIMEOUT 15000    //how much to wait for server reply
 
 #define STORAGE 1                     //save logs in flash storage
 #define STORAGE_CONFIG_MAIN 0         //flash index to store configuration

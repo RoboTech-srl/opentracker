@@ -40,8 +40,8 @@ void gsm_init() {
   pinMode(PIN_C_KILL_GSM, OUTPUT);
   digitalWrite(PIN_C_KILL_GSM, LOW);
 
-  pinMode(PIN_STATUS_GSM, INPUT);
-  pinMode(PIN_RING_GSM, INPUT);
+  pinMode(PIN_STATUS_GSM, INPUT_PULLUP);
+  pinMode(PIN_RING_GSM, INPUT_PULLUP);
   
   pinMode(PIN_WAKE_GSM, OUTPUT); 
   digitalWrite(PIN_WAKE_GSM, HIGH);
@@ -83,13 +83,14 @@ void gsm_on() {
 
   int k=0;
   for (;;) {
-    unsigned long t = millis();
-  
     if(!gsm_power_status()) { // now off, turn on
+      unsigned long t = millis();
       digitalWrite(PIN_C_PWR_GSM, HIGH);
+      while (!gsm_power_status() && (millis() - t < 1000));
+      t = millis();
+      digitalWrite(PIN_C_PWR_GSM, LOW);
       while (!gsm_power_status() && (millis() - t < 5000))
         delay(100);
-      digitalWrite(PIN_C_PWR_GSM, LOW);
       status_delay(1000);
     }
   
@@ -179,6 +180,15 @@ void gsm_setup() {
 
   //turn on modem
   gsm_on();
+
+#if MODEM_BG96
+  pinMode(PD0, OUTPUT);
+  digitalWrite(PD0, HIGH);
+  gsm_port.print("AT+QGPSCFG=\"outport\",\"uartnmea\"\r");
+  gsm_wait_for_reply(1,0);
+  gsm_port.print("AT+QGPS=1\r");
+  gsm_wait_for_reply(1,0);
+#endif
 
   //configure
   gsm_config();
@@ -497,20 +507,30 @@ int gsm_set_apn()  {
     if(modem_reply[0] != 0) break;
   }
   while (millis() - t < 60000);
+  if (strstr(modem_reply, "OK") == NULL)
+    return 0;
 
-  gsm_port.print(AT_LOCALIP); // diagnostic only
+  // verify we have a local IP address
+  gsm_port.print(AT_LOCALIP);
+#if MODEM_M95
   status_delay(500);
-  gsm_get_reply(0);
-
+  gsm_get_reply(1);
+  if (strstr(modem_reply, ".") == NULL)
+    return 0;
+#else
+  gsm_wait_for_reply(1,0);
+  if (strstr(modem_reply, "OK") == NULL)
+    return 0;
+#endif
   gsm_send_at();
 
-  gsm_port.print(AT_CONFIGDNS "\"8.8.8.8\"");
-  gsm_port.print("\r");
-
+  // set google DNS (TODO: make optional)
+  gsm_port.print(AT_CONFIGDNS "\"8.8.8.8\"\r");
   gsm_wait_for_reply(1,0);
+  if (strstr(modem_reply, "OK") == NULL)
+    return 0;
 
   debug_print(F("gsm_set_apn() completed"));
-
   return 1;
 }
 
