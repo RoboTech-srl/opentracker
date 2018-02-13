@@ -19,7 +19,8 @@ int parse_receive_reply() {
     return 0; // abort
   }
 
-  for(int i=0;i<50;i++) {
+  long last = millis();
+  while ((long)(millis() - last) < SERVER_REPLY_TIMEOUT) {
 #if MODEM_UG96
     gsm_get_reply(1); //flush buffer
 
@@ -83,6 +84,9 @@ int parse_receive_reply() {
       addon_delay(500);
       continue;
     }
+
+    // data is available, reset timeout
+    last = millis();
 
     // remove trailing modem response (OK)
     if (len < sizeof(modem_reply) - 1)
