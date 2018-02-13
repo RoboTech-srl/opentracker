@@ -59,6 +59,7 @@ int gsm_reply_failures = 0;
 
 //settings structure
 struct settings {
+  byte first_run;         //set to 1 after first run
   char apn[64];
   char user[20];
   char pwd[20];
