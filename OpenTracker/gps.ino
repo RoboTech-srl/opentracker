@@ -2,8 +2,10 @@
 void gps_init() {
   debug_print(F("gps_init() started"));
 
+#ifdef PIN_STANDBY_GPS
   pinMode(PIN_STANDBY_GPS, OUTPUT);
   digitalWrite(PIN_STANDBY_GPS, LOW);
+#endif
 
   pinMode(PIN_RESET_GPS, OUTPUT);
   digitalWrite(PIN_RESET_GPS, LOW);
@@ -14,7 +16,11 @@ void gps_init() {
 }
 
 void gps_open() {
+#if MODEM_BG96
+  gps_port.begin(115200);
+#else
   gps_port.begin(9600);
+#endif
 }
 
 void gps_close() {
@@ -25,7 +31,8 @@ void gps_setup() {
   debug_print(F("gps_setup() started"));
 
   gps_on();
-
+  gps_wakeup();
+  
   // read the first 4 lines within timeout
   unsigned long t = millis();
   for(int i=0; i<4; ++i) {
@@ -47,7 +54,6 @@ void gps_on() {
   debug_print(F("gps_on() started"));
 
   delay(100);
-  digitalWrite(PIN_STANDBY_GPS, LOW);
   digitalWrite(PIN_RESET_GPS, LOW);
 
   debug_print(F("gps_on() completed"));
@@ -57,7 +63,6 @@ void gps_off() {
   //turn off GPS
   debug_print(F("gps_off() started"));
 
-  digitalWrite(PIN_STANDBY_GPS, HIGH);
   digitalWrite(PIN_RESET_GPS, HIGH);
   delay(100);
 
