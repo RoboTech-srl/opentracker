@@ -22,7 +22,7 @@ void storage_save_current() {
 
 void storage_get_index() {
   //storage_dump();
-  debug_print(F("store_get_index() started"));
+  debug_print(F("storage_get_index() started"));
 
   //scan flash for current log position (new log writes will continue from there)
   byte *tmp = dueFlashStorage.readAddress(STORAGE_DATA_START);
@@ -35,7 +35,7 @@ void storage_get_index() {
       //found log index
       logindex = tmp - dueFlashStorage.readAddress(0);
 
-      debug_print(F("store_get_index(): Found log position:"));
+      debug_print(F("storage_get_index(): Found log position:"));
       break;  //we only need first found index
     }
     ++tmp;
@@ -43,11 +43,11 @@ void storage_get_index() {
   if (tmp >= tmpend) { // probable corruption, re-initialize
     logindex = STORAGE_DATA_START;
     dueFlashStorage.write(logindex, STORAGE_FREE_CHAR);
-    debug_print(F("store_get_index(): Not found, initialize log position:"));
+    debug_print(F("storage_get_index(): Not found, initialize log position:"));
   }
   debug_print(logindex);
 
-  debug_print(F("store_get_index() ended"));
+  debug_print(F("storage_get_index() ended"));
 }
 
 void storage_send_logs(int really_send) {
