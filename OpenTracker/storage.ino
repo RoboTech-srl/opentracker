@@ -9,12 +9,12 @@ void storage_save_current() {
     debug_print(F("storage_save_current(): flash memory is full, starting to overwrite"));
     logindex = STORAGE_DATA_START;
   }
-  //saving data_current to flash memory
-  dueFlashStorage.write(logindex, (byte*)data_current, data_len);
-  logindex += data_len;
-
   //adding index marker, it will be overwritten with next flash write
-  dueFlashStorage.write(logindex, STORAGE_FREE_CHAR);
+  data_current[data_len] = STORAGE_FREE_CHAR;
+
+  //saving data_current to flash memory, including index marker
+  dueFlashStorage.write(logindex, (byte*)data_current, data_len + 1);
+  logindex += data_len;
 
   debug_print(F("storage_save_current() ended"));
   //storage_dump();
@@ -33,7 +33,7 @@ void storage_get_index() {
       block = true;
     else if (block && (*tmp == STORAGE_FREE_CHAR)) {
       //found log index
-      logindex = tmp - FLASH_START;
+      logindex = tmp - dueFlashStorage.readAddress(0);
 
       debug_print(F("store_get_index(): Found log position:"));
       break;  //we only need first found index
@@ -63,7 +63,7 @@ void storage_send_logs(int really_send) {
   while (tmp < tmpend) {
     if (*tmp != STORAGE_FREE_CHAR) {
       //found sent position
-      sent_position = tmp - FLASH_START;
+      sent_position = tmp - dueFlashStorage.readAddress(0);
 
       debug_print(F("storage_send_logs(): Found log sent position:"));
       break;  //we only need first found index
@@ -76,7 +76,7 @@ void storage_send_logs(int really_send) {
     while (tmp < tmpend) {
       if (*tmp != STORAGE_FREE_CHAR) {
         //found sent position
-        sent_position = tmp - FLASH_START;
+        sent_position = tmp - dueFlashStorage.readAddress(0);
   
         debug_print(F("storage_send_logs(): Found log sent position:"));
         break;  //we only need first found index
@@ -107,9 +107,7 @@ void storage_send_logs(int really_send) {
           debug_print(F("storage_send_logs(): Success, erase sent data"));
     
           // erase block (after sent)
-          for (int k=0; k<data_len; ++k) {
-            dueFlashStorage.write(sent_position + k, STORAGE_FREE_CHAR);
-          }
+          dueFlashStorage.write(sent_position, STORAGE_FREE_CHAR, data_len);
           sent_position += data_len;
           // apply send limit
           num_sent++;
