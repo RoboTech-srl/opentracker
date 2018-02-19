@@ -81,9 +81,9 @@ float analog_input_voltage(int pin, int range)
 {
   float sensorValue = analogRead(pin);
   if (range == HIGH)
-    sensorValue *= 242.0f * ANALOG_VREF / 1023.0f / 22.0f;
+    sensorValue *= ANALOG_SCALE * ANALOG_VREF / 1024.0f;
   if (range == LOW)
-    sensorValue *= ANALOG_VREF / 1023.0f;
+    sensorValue *= ANALOG_SCALE_LOW * ANALOG_VREF / 1024.0f;
   return sensorValue;
 }
 
