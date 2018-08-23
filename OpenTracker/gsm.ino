@@ -60,7 +60,7 @@ void gsm_close() {
 }
 
 bool gsm_power_status() {
-#if MODEM_UG96
+#if MODEM_UG96 || OPENTRACKER_HW_REV >= 0x0300
   // inverted status signal
   return digitalRead(PIN_STATUS_GSM) != HIGH;
 #else
