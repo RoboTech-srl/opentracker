@@ -1,6 +1,7 @@
 //gsm functions
 
-#if MODEM_UG96
+#if MODEM_UG96 || MODEM_EG91 || MODEM_BG96
+#define MODEM_CMDSET 1
 #define AT_CONTEXT "AT+QICSGP=1,1,"
 #define AT_ACTIVATE "AT+QIACT=1\r"
 #define AT_DEACTIVATE "AT+QIDEACT=1\r"
@@ -15,6 +16,7 @@
 #define AT_ACKRESP "+QISEND: "
 #define AT_NTP "AT+QNTP=1,"
 #else
+#define MODEM_CMDSET 0
 #define AT_CONTEXT "AT+QIREGAPP="
 #define AT_ACTIVATE "AT+QIACT\r"
 #define AT_DEACTIVATE "AT+QIDEACT\r"
@@ -60,7 +62,7 @@ void gsm_close() {
 }
 
 bool gsm_power_status() {
-#if MODEM_UG96 || OPENTRACKER_HW_REV >= 0x0300
+#if (OPENTRACKER_HW_REV >= 0x0300) || MODEM_UG96
   // inverted status signal
   return digitalRead(PIN_STATUS_GSM) != HIGH;
 #else
@@ -138,11 +140,17 @@ void gsm_off(int emergency) {
     gsm_wait_for_reply(1,0);
 #else
     digitalWrite(PIN_C_PWR_GSM, HIGH);
-    while (gsm_power_status() && (millis() - t < 5000))
-      delay(100);
+    delay(750);
     digitalWrite(PIN_C_PWR_GSM, LOW);
 #endif
-    status_delay(1000);
+
+    // power-off timeout 12s except EG9x modules which have 30s
+    while (gsm_power_status() && (millis() - t < (12500
+#if MODEM_EG91
+      + 18000
+#endif
+      )))
+      delay(100);
   }
   gsm_get_reply(1);
 
@@ -151,7 +159,11 @@ void gsm_off(int emergency) {
 
 void gsm_standby() {
   // clear wake signal
+#if OPENTRACKER_HW_REV >= 0x0300
+  digitalWrite(PIN_WAKE_GSM, LOW);
+#else
   digitalWrite(PIN_WAKE_GSM, HIGH);
+#endif
   // standby GSM
   gsm_port.print("AT+CFUN=4\r");
   gsm_wait_for_reply(1,0);
@@ -161,7 +173,11 @@ void gsm_standby() {
 
 void gsm_wakeup() {
   // wake GSM
+#if OPENTRACKER_HW_REV >= 0x0300
+  digitalWrite(PIN_WAKE_GSM, HIGH);
+#else
   digitalWrite(PIN_WAKE_GSM, LOW);
+#endif
   delay(1000);
   gsm_port.print("AT+QSCLK=0\r");
   gsm_wait_for_reply(1,0);
@@ -436,7 +452,7 @@ int gsm_disconnect() {
 #else
   //close connection, if previous attempts left it open
   gsm_port.print(AT_CLOSE);
-  gsm_wait_for_reply(MODEM_UG96,0);
+  gsm_wait_for_reply(MODEM_CMDSET,0);
 
   //ignore errors (will be taken care during connect)
   ret = 1;
@@ -453,9 +469,9 @@ int gsm_deactivate() {
   
   //disconnect GSM
   gsm_port.print(AT_DEACTIVATE);
-  gsm_wait_for_reply(MODEM_UG96,0);
+  gsm_wait_for_reply(MODEM_CMDSET,0);
 
-#if MODEM_UG96
+#if MODEM_CMDSET
   //check if result contains OK
   char *tmp = strstr(modem_reply, "OK");
 #else
@@ -475,7 +491,7 @@ int gsm_set_apn()  {
 
   //disconnect GSM
   gsm_port.print(AT_DEACTIVATE);
-  gsm_wait_for_reply(MODEM_UG96,0);
+  gsm_wait_for_reply(MODEM_CMDSET,0);
 
   addon_event(ON_MODEM_ACTIVATION);
   
@@ -544,7 +560,7 @@ int gsm_get_connection_status() {
 
   gsm_wait_for_reply(1,0);
 
-#if MODEM_UG96
+#if MODEM_CMDSET
   char *tmp = strtok(modem_reply, ",");
   if (tmp != NULL && strstr(modem_reply, "+QISTATE:") != NULL) {
     for (int k=0; k<5; ++k) {
@@ -629,16 +645,16 @@ int gsm_connect() {
       if (ipstat > 1) {
         //close connection, if previous attempts failed
         gsm_port.print(AT_CLOSE);
-        gsm_wait_for_reply(MODEM_UG96,0);
+        gsm_wait_for_reply(MODEM_CMDSET,0);
         ipstat = 0;
       }
       if (ipstat < 0) {
         //deactivate required
         gsm_port.print(AT_DEACTIVATE);
-        gsm_wait_for_reply(MODEM_UG96,0);
+        gsm_wait_for_reply(MODEM_CMDSET,0);
         ipstat = 0;
 
-#if MODEM_UG96
+#if MODEM_CMDSET
         gsm_port.print(AT_ACTIVATE);
         gsm_wait_for_reply(1,0);
         
@@ -677,7 +693,7 @@ int gsm_connect() {
         do {
           gsm_get_reply(1);
 
-#if MODEM_UG96
+#if MODEM_CMDSET
           char *tmp = strstr(modem_reply, "+QIOPEN: 0,");
           if(tmp!=NULL) {
             tmp += strlen("+QIOPEN: 0,");

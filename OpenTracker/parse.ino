@@ -20,7 +20,7 @@ int parse_receive_reply() {
 
   long last = millis();
   while ((long)(millis() - last) < SERVER_REPLY_TIMEOUT) {
-#if MODEM_UG96
+#if MODEM_CMDSET
     gsm_get_reply(1); //flush buffer
 
     // query unread length
@@ -57,7 +57,7 @@ int parse_receive_reply() {
     
     tmp = strstr(modem_reply, "+QIRD:");
     if(tmp!=NULL) {
-#if MODEM_UG96
+#if MODEM_CMDSET
       tmp += strlen("+QIRD:");
 #else
       tmp = strstr(modem_reply, PROTO ","); //get data length
