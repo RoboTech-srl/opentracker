@@ -148,7 +148,7 @@ int parse_receive_reply() {
   // apply restrictions to response code
   if (1 PARSE_ACCEPTED_RESPONSE_CODES)
     ret = 0;
-#undef RESP_CODE(x)
+#undef RESP_CODE
 #endif
 
 #if !PARSE_IGNORE_EOF

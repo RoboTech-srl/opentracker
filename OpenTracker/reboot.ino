@@ -7,6 +7,7 @@ void reboot() {
   //emergency power off GSM
   gsm_off(1);
 
+#if defined(_SAM3XA_)
   //disable USB to allow reboot
   //serial monitor on the PC won't work anymore if you don't close it before reset completes
   //otherwise, close the serial monitor, detach the USB cable and connect it again
@@ -22,9 +23,14 @@ void reboot() {
     // the reset reason will be wrong when the board starts the next time around.
     WDT_Restart(WDT);
   }
+#else
+  __disable_irq();
+  NVIC_SystemReset();
+#endif
 }
 
 void usb_console_disable() {
+#if defined(_SAM3XA_)
   cpu_irq_disable();
   
   // debug_port.end() does nothing, manually disable USB serial console
@@ -40,24 +46,36 @@ void usb_console_disable() {
   NVIC_ClearPendingIRQ((IRQn_Type) ID_UOTGHS);
 
   cpu_irq_enable();
+#else
+  usbd_interface_deinit();
+#endif
 }
 
 void usb_console_restore() {
+#if defined(_SAM3XA_)
   if (!Is_otg_enabled()) {
     // re-initialize USB
     UDD_Init();
     UDD_Attach();
   }
+#else
+  usbd_interface_init();
+#endif
 }
 
 // override for lower power consumption (wait for interrupt)
 void yield(void) {
+#if defined(_SAM3XA_)
   pmc_enable_sleepmode(0);
+#else
+  __WFI();
+#endif
 }
 
 void cpu_slow_down() {
   addon_event(ON_CLOCK_PAUSE);
 
+#if defined(_SAM3XA_)
   SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk; // temp disable interrupt
   
   // slow down CPU
@@ -66,6 +84,7 @@ void cpu_slow_down() {
   // update timer settings
   SystemCoreClockUpdate();
   SysTick_Config(SystemCoreClock / 1000);
+#endif
 
   addon_event(ON_CLOCK_RESUME);
 }
@@ -73,9 +92,11 @@ void cpu_slow_down() {
 void cpu_full_speed() {
   addon_event(ON_CLOCK_PAUSE);
 
+#if defined(_SAM3XA_)
   // re-init clocks to full speed
   SystemInit();
   SysTick_Config(SystemCoreClock / 1000);
+#endif
 
   addon_event(ON_CLOCK_RESUME);
 }
@@ -124,18 +145,22 @@ void kill_power() {
   gsm_off(1);
   gsm_close();
   usb_console_disable();
+#if defined(_SAM3XA_)
   // slow down cpu even more
   pmc_switch_mainck_to_fastrc(CKGR_MOR_MOSCRCF_4_MHz);
   cpu_slow_down();
   cpu_irq_disable();
+#endif
   // turn off LED and CAN
   digitalWrite(PIN_POWER_LED, HIGH);
   pinMode(PIN_CAN_RS, OUTPUT);
   digitalWrite(PIN_CAN_RS, HIGH);
+#if defined(_SAM3XA_)
   // disable peripherals and use wait mode
   pmc_set_writeprotect(0);
   pmc_disable_all_periph_clk();
   pmc_enable_waitmode();
+#endif
   for(;;) // freeze in low power mode
   reboot();
 }
