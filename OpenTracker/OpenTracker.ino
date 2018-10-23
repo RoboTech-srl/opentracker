@@ -320,6 +320,21 @@ void device_init() {
   digitalWrite(PIN_C_OUT_1, LOW);
   pinMode(PIN_C_OUT_2, OUTPUT);
   digitalWrite(PIN_C_OUT_2, LOW);
+
+  // setup CAN in low power
+  pinMode(PIN_CAN_RS, OUTPUT);
+  digitalWrite(PIN_CAN_RS, HIGH);
+
+#if (OPENTRACKER_HW_REV >= 0x0300)
+  pinMode(PIN_C_OUT_ENA, OUTPUT);
+  digitalWrite(PIN_C_OUT_ENA, LOW);
+
+  pinMode(PIN_C_OUT_CS, OUTPUT);
+  pinMode(PIN_C_ACC_CS, OUTPUT);
+  
+  digitalWrite(PIN_C_OUT_CS, HIGH);
+  digitalWrite(PIN_C_ACC_CS, HIGH);
+#endif
 }
 
 // when DEBUG is defined >= 2 then serial monitor accepts test commands
