@@ -33,7 +33,7 @@ long time_start, time_stop, time_diff;             //count execution time to tri
 int interval_count = 0;         //current interval count (increased on each data collection and reset after sending)
 int sms_check_count = 0;        //counter for SMS check (increased on each cycle and reset after check)
 
-char data_current[DATA_LIMIT+2];  //data collected in one go, max 2500 chars
+char data_current[DATA_LIMIT];  //data collected in one go, max 2500 chars
 int data_index = 0;             //current data index (where last data record stopped)
 char time_char[24];             //time attached to every data line
 char modem_reply[200];          //data received from modem, max 200 chars
