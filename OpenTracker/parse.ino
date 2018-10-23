@@ -6,6 +6,7 @@ int parse_receive_reply() {
   unsigned int len = 0;
   byte header = 0;
   int resp_code = 0;
+  int ntry = 0;
 
   char *tmp;
   char cmd[100] = "";  //remote commands stored here
@@ -29,22 +30,30 @@ int parse_receive_reply() {
 
     tmp = strstr(modem_reply, "+QIRD:");
     if(tmp!=NULL) {
-      tmp = strtok(modem_reply, ",");
-      for (int k=0; k<2; ++k) {
-        tmp = strtok(NULL, ",");
-      }
-      if (tmp != NULL && atoi(tmp) == 0) {
-        // no more data to read
+      tmp = strtok(tmp+6, ",");
+      int total = (tmp != NULL) ? atoi(tmp) : -1;
+      tmp = strtok(NULL, ",");
+      int nread = (tmp != NULL) ? atoi(tmp) : -1;
+      tmp = strtok(NULL, ",");
+      int unred = (tmp != NULL) ? atoi(tmp) : -1;
+      debug_print(total);
+      debug_print(nread);
+      debug_print(unred);
+      // no more data to read?
+      if ((total == 0 && ++ntry > SERVER_REPLY_RETRY) || (unred == 0 && total != 0)) {
         if (gsm_get_connection_status() != 1)
-          break; // exit if no more connected
+          break; // exit if no longer connected
+      } else if (total == 0) {
+        addon_delay(500);
+        continue; // retry (wait for data rx)
       }
     }
+    ntry = 0;
 #endif
     gsm_get_reply(1); //flush buffer
 
     // read server reply
-    gsm_port.print(AT_RECEIVE "100");
-    gsm_port.print("\r");
+    gsm_port.print(AT_RECEIVE "100\r");
 
     gsm_wait_for_reply(1,0);
 
