@@ -171,3 +171,10 @@ void settings_save() {
   
   debug_print(F("settings_save() finished"));
 }
+
+int settings_compare(size_t offset, size_t len) {
+  // compare part of the stored settings with the same part in volatile memory
+  byte* b = dueFlashStorage.readAddress(STORAGE_CONFIG_MAIN);
+  return memcmp((byte*)&config + offset, b + offset, len);
+}
+

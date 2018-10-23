@@ -69,6 +69,7 @@ struct settings {
   char sim_pin[5];        //PIN for SIM card
   char sms_key[12];       //password for SMS commands
   char imei[20];          //IMEI number
+  char iccid[25];         //ICCID number
   byte alarm_on;
   char alarm_phone[20];   //alarm phone number
   byte queclocator;       //flag to use QuecLocator fallback when GPS not available
@@ -133,10 +134,13 @@ void setup() {
   data_reset();
 
 #ifdef KNOWN_APN_LIST
-  // auto scanning of apn details configuration
-  int ap = gsm_scan_known_apn();
-  if (ap) {
-    save_config = 1; // found good APN, save it as default
+  // only with a new SIM
+  if (settings_compare(offsetof(settings, iccid), strlen(config.iccid))) {
+    // auto scanning of apn details configuration
+    int ap = gsm_scan_known_apn();
+    if (ap) {
+      settings_save(); // found good APN, save it as default
+    }
   }
 #endif
 

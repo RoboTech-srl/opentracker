@@ -216,6 +216,9 @@ void gsm_config() {
   //supply PIN code if needed
   gsm_set_pin();
 
+  //get SIM ICCID
+  gsm_get_iccid();
+
   // wait up to 1 minute
   gsm_wait_modem_ready(60000);
   
@@ -408,6 +411,32 @@ void gsm_get_imei() {
   debug_print(config.imei);
 
   debug_print(F("gsm_get_imei() completed"));
+}
+
+void gsm_get_iccid() {
+  debug_print(F("gsm_get_iccid() started"));
+
+  //get modem's imei
+  gsm_port.print("AT+CCID\r");
+
+  status_delay(500);
+  gsm_get_reply(1);
+
+  //reply data stored to modem_reply
+  char *tmp = strstr(modem_reply, "+CCID:");
+  if (tmp) {
+    char *tmpval = strtok(tmp, "\"");
+    if (tmpval)
+      tmpval = strtok(NULL, "\"");
+      
+    //copy data to main IMEI var
+    if (tmpval)
+      strlcpy(config.iccid, tmpval, sizeof(config.iccid));
+  }
+  debug_print(F("gsm_get_iccid() result:"));
+  debug_print(config.iccid);
+  
+  debug_print(F("gsm_get_iccid() completed"));
 }
 
 int gsm_send_at() {
