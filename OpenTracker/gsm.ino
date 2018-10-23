@@ -91,7 +91,7 @@ void gsm_on() {
       while (!gsm_power_status() && (millis() - t < 1000));
       t = millis();
       digitalWrite(PIN_C_PWR_GSM, LOW);
-      while (!gsm_power_status() && (millis() - t < 5000))
+      while (!gsm_power_status() && (millis() - t < 15000))
         delay(100);
       status_delay(1000);
     }
