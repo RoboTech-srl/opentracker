@@ -1,6 +1,9 @@
+void sms_check() {
+  sms_check(0);
+}
 
 //check SMS
-void sms_check() {
+void sms_check(int max_count) {
   int msg_count = 30; // default
   char *tmp = NULL, *tmpcmd = NULL;
   char phone[32] = "";
@@ -8,6 +11,7 @@ void sms_check() {
 
   debug_print(F("sms_check() started"));
 
+  if (max_count >= 0) {
   gsm_get_reply(1); // clear buffer
   gsm_port.print("AT+CPMS?\r");
   gsm_wait_for_reply(1,1);
@@ -26,6 +30,11 @@ void sms_check() {
         }
       }
     }
+  }
+    if (max_count > 0 && msg_count > max_count)
+      msg_count = max_count;
+  } else {
+    msg_count = -max_count;
   }
 
   for(int i=1;i<=msg_count;i++) {
