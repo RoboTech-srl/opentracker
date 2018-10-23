@@ -161,6 +161,11 @@ void kill_power() {
   pmc_disable_all_periph_clk();
   pmc_enable_waitmode();
 #endif
+#if (OPENTRACKER_HW_REV >= 0x0300)
+  RTC_StartAlarm(0, 0, 0, 0, 0, AM, OFF_MSK);
+  RTC_StopAlarm();
+  RTC_SetOutput(RTC_OUTPUT_ALARMA, RTC_OUTPUT_POLARITY_LOW, RTC_OUTPUT_TYPE_PUSHPULL);
+#endif
   for(;;) // freeze in low power mode
   reboot();
 }
