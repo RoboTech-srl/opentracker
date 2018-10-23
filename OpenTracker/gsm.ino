@@ -225,6 +225,13 @@ void gsm_config() {
   //misc GSM startup commands (disable echo)
   gsm_startup_cmd();
 
+  // wait for network availability (max 30s)
+  gsm_wait_network_ready(30000);
+
+  // informational only
+  gsm_port.print("AT+COPS?\r");
+  gsm_wait_for_reply(1,0);
+
   //set GSM APN
   gsm_set_apn();
 }
@@ -235,6 +242,17 @@ void gsm_wait_modem_ready(int timeout) {
   do {
     int pas = gsm_get_modem_status();
     if(pas==0 || pas==3 || pas==4) break;
+    status_delay(3000);
+  }
+  while ((long)(millis() - t) < timeout);
+}
+
+void gsm_wait_network_ready(int timeout) {
+  // wait for modem ready (attached to network)
+  unsigned long t = millis();
+  do {
+    int reg = gsm_get_network_status();
+    if(reg==1 || reg==5 || reg==3) break;
     status_delay(3000);
   }
   while ((long)(millis() - t) < timeout);
@@ -441,6 +459,31 @@ int gsm_get_modem_status() {
   debug_print(F("gsm_get_modem_status() returned: "));
   debug_print(pas);
   return pas;
+}
+
+int gsm_get_network_status() {
+  debug_print(F("gsm_get_network_status() started"));
+
+  gsm_port.print("AT+CGREG?\r");
+
+  int reg = -1; // unexpected reply
+  for (int k=0; k<10; ++k) {
+    status_delay(50);
+    gsm_get_reply(0);
+  
+    char *tmp = strstr(modem_reply, "+CGREG:");
+    if(tmp!=NULL)
+      tmp = strchr(tmp+7,',');
+    if(tmp!=NULL) {
+      reg = atoi(tmp+1);
+      break;
+    }
+  }
+  gsm_wait_for_reply(1,0);
+  
+  debug_print(F("gsm_get_network_status() returned: "));
+  debug_print(reg);
+  return reg;
 }
 
 int gsm_disconnect() {
