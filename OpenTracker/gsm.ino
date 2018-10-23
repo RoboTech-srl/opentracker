@@ -279,8 +279,7 @@ void gsm_set_pin() {
 
   for (int k=0; k<5; ++k) {
     //checking if PIN is set
-    gsm_port.print("AT+CPIN?");
-    gsm_port.print("\r");
+    gsm_port.print("AT+CPIN?\r");
   
     gsm_wait_for_reply(1,1);
   
@@ -333,8 +332,7 @@ void gsm_get_time() {
   gsm_get_reply(0);
 
   //get time from modem
-  gsm_port.print("AT+CCLK?");
-  gsm_port.print("\r");
+  gsm_port.print("AT+CCLK?\r");
 
   gsm_wait_for_reply(1,1);
 
@@ -356,28 +354,24 @@ void gsm_startup_cmd() {
   debug_print(F("gsm_startup_cmd() started"));
 
   //disable echo for TCP data
-  gsm_port.print("AT+QISDE=0");
-  gsm_port.print("\r");
+  gsm_port.print("AT+QISDE=0\r");
 
   gsm_wait_for_reply(1,0);
 
 #if MODEM_M95
   //set receiving TCP data by command
-  gsm_port.print("AT+QINDI=1");
-  gsm_port.print("\r");
+  gsm_port.print("AT+QINDI=1\r");
 
   gsm_wait_for_reply(1,0);
 
   //set multiple socket support
-  gsm_port.print("AT+QIMUX=1");
-  gsm_port.print("\r");
+  gsm_port.print("AT+QIMUX=1\r");
 
   gsm_wait_for_reply(1,0);
 #endif
 
   //set SMS as text format
-  gsm_port.print("AT+CMGF=1");
-  gsm_port.print("\r");
+  gsm_port.print("AT+CMGF=1\r");
 
   gsm_wait_for_reply(1,0);
 
@@ -397,8 +391,7 @@ void gsm_get_imei() {
   debug_print(F("gsm_get_imei() started"));
 
   //get modem's imei
-  gsm_port.print("AT+GSN");
-  gsm_port.print("\r");
+  gsm_port.print("AT+GSN\r");
 
   status_delay(1000);
   gsm_get_reply(1);
@@ -440,8 +433,7 @@ int gsm_send_at() {
 int gsm_get_modem_status() {
   debug_print(F("gsm_get_modem_status() started"));
 
-  gsm_port.print("AT+CPAS");
-  gsm_port.print("\r");
+  gsm_port.print("AT+CPAS\r");
 
   int pas = -1; // unexpected reply
   for (int k=0; k<10; ++k) {
@@ -551,9 +543,7 @@ int gsm_set_apn()  {
   gsm_wait_for_reply(1,0);
 
 #if MODEM_M95
-  gsm_port.print("AT+QIDNSIP=1");
-  gsm_port.print("\r");
-
+  gsm_port.print("AT+QIDNSIP=1\r");
   gsm_wait_for_reply(1,0);
 #endif
 
@@ -701,9 +691,7 @@ int gsm_connect() {
         gsm_port.print(AT_ACTIVATE);
         gsm_wait_for_reply(1,0);
         
-        gsm_port.print(AT_CONFIGDNS "\"8.8.8.8\"");
-        gsm_port.print("\r");
-      
+        gsm_port.print(AT_CONFIGDNS "\"8.8.8.8\"\r");
         gsm_wait_for_reply(1,0);
 #endif
       }
@@ -1277,57 +1265,47 @@ int gsm_is_final_result(const char* reply, int allowOK) {
 }
 
 void gsm_debug() {
-  gsm_port.print("AT+QLOCKF=?");
-  gsm_port.print("\r");
+  gsm_port.print("AT+QLOCKF=?\r");
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+QBAND?");
-  gsm_port.print("\r");
+  gsm_port.print("AT+QBAND?\r");
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+CGMR");
-  gsm_port.print("\r");
+  gsm_port.print("AT+CGMR\r");
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+CGMM");
-  gsm_port.print("\r");
+  gsm_port.print("AT+CGMM\r");
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+CGSN");
-  gsm_port.print("\r");
+  gsm_port.print("AT+CGSN\r");
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+CREG?");
-  gsm_port.print("\r");
+  gsm_port.print("AT+CREG?\r");
 
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+CSQ");
-  gsm_port.print("\r");
+  gsm_port.print("AT+CSQ\r");
 
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+QENG?");
-  gsm_port.print("\r");
+  gsm_port.print("AT+QENG?\r");
 
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+COPS?");
-  gsm_port.print("\r");
+  gsm_port.print("AT+COPS?\r");
 
   status_delay(2000);
   gsm_get_reply(0);
 
-  gsm_port.print("AT+COPS=?");
-  gsm_port.print("\r");
+  gsm_port.print("AT+COPS=?\r");
 
   status_delay(6000);
   gsm_get_reply(0);
