@@ -107,7 +107,10 @@ void collect_all_data(int ignitionState) {
 
   data_field_restart();
 
+#if GSM_USE_QUECLOCATOR_TIMEOUT > 0
   int idx = data_index;
+#endif
+
   collect_gps_data();
   
 #if GSM_USE_QUECLOCATOR_TIMEOUT > 0
