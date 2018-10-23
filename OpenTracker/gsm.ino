@@ -396,17 +396,19 @@ void gsm_get_imei() {
   //get modem's imei
   gsm_port.print("AT+GSN\r");
 
-  status_delay(1000);
+  status_delay(500);
   gsm_get_reply(1);
 
   //reply data stored to modem_reply
   char *tmp = strstr(modem_reply, "AT+GSN\r\r\n");
-  tmp += strlen("AT+GSN\r\r\n");
-  char *tmpval = strtok(tmp, "\r");
-
-  //copy data to main IMEI var
-  strlcpy(config.imei, tmpval, sizeof(config.imei));
-
+  if (tmp) {
+    tmp += strlen("AT+GSN\r\r\n");
+    char *tmpval = strtok(tmp, "\r");
+  
+    //copy data to main IMEI var
+    if (tmpval)
+      strlcpy(config.imei, tmpval, sizeof(config.imei));
+  }
   debug_print(F("gsm_get_imei() result:"));
   debug_print(config.imei);
 
