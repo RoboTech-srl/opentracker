@@ -633,7 +633,11 @@ int gsm_get_connection_status() {
     if (tmp != NULL) {
       ret = atoi(tmp);
       debug_print(ret);
+#if MODEM_UG96
       if (ret == 3)
+#else
+      if (ret == 2)
+#endif
         ret = 1; // already connected
       else if (ret > 0)
         ret = 2; // previous connection failed, should close
