@@ -1128,8 +1128,12 @@ int gsm_read_line(int index = 0) {
         }
       }
     }
-  } while((signed long)(millis() - last) < 10); // allow some inter-character delay
+  } while(gsm_port.available() || (signed long)(millis() - last) < 10); // allow some inter-character delay
 
+  if (index > 0 && (inChar == '\r') && index < (int)sizeof(modem_reply)-1) {
+    modem_reply[index] = '\n'; // sometimes newline is missing, fix it
+    ++index;
+  }
   modem_reply[index] = '\0'; // Null terminate the string
   return index;
 }
