@@ -326,8 +326,13 @@ void device_init() {
   digitalWrite(PIN_CAN_RS, HIGH);
 
 #if (OPENTRACKER_HW_REV >= 0x0300)
+  pinMode(PIN_C_5V_ENABLE, OUTPUT);
+  digitalWrite(PIN_C_5V_ENABLE, HIGH);
+
+#ifdef PIN_C_OUT_ENA
   pinMode(PIN_C_OUT_ENA, OUTPUT);
   digitalWrite(PIN_C_OUT_ENA, LOW);
+#endif
 
   pinMode(PIN_C_OUT_CS, OUTPUT);
   pinMode(PIN_C_ACC_CS, OUTPUT);
