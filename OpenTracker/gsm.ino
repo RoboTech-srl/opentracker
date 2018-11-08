@@ -427,9 +427,9 @@ void gsm_get_iccid() {
   //reply data stored to modem_reply
   char *tmp = strstr(modem_reply, "+CCID:");
   if (tmp) {
-    char *tmpval = strtok(tmp, "\"");
+    char *tmpval = strtok(tmp, "\" ");
     if (tmpval)
-      tmpval = strtok(NULL, "\"");
+      tmpval = strtok(NULL, "\"\r\n");
       
     //copy data to main IMEI var
     if (tmpval)
@@ -1135,7 +1135,7 @@ int gsm_read_line(int index = 0) {
       }
     }
   } while(gsm_port.available() || (signed long)(millis() - last) < 10); // allow some inter-character delay
-
+  
   if (index > 0 && (inChar == '\r') && index < (int)sizeof(modem_reply)-1) {
     modem_reply[index] = '\n'; // sometimes newline is missing, fix it
     ++index;
@@ -1490,4 +1490,3 @@ void gsm_ntp_update()
   debug_print(F("gsm_ntp_update() completed"));
 }
 #endif
-
