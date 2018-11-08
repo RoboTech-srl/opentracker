@@ -64,7 +64,16 @@ void usb_console_restore() {
 }
 
 // override for lower power consumption (wait for interrupt)
-void yield(void) {
+extern "C" void yield(void) {
+#if defined(INC_FREERTOS_H)
+#if ((INCLUDE_xTaskGetSchedulerState == 1) || (configUSE_TIMERS == 1))
+  if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+#endif
+  {
+    vTaskDelay(1); // not using taskYIELD() because lower priority tasks would not run otherwise!
+    return;
+  }
+#endif
 #if defined(_SAM3XA_)
   pmc_enable_sleepmode(0);
 #else
@@ -169,4 +178,3 @@ void kill_power() {
   for(;;) // freeze in low power mode
   reboot();
 }
-
