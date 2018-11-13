@@ -339,17 +339,17 @@ void gsm_get_time() {
 
   gsm_wait_for_reply(1,1);
 
-  char *tmp = strstr(modem_reply, "+CCLK: \"");
-  tmp += strlen("+CCLK: \"");
-  char *tmpval = strtok(tmp, "\"");
+  char *tmp = strstr(modem_reply, "+CCLK: ");
+  if (tmp)
+    tmp = strtok(tmp + 7, "\"\r");
+  if (tmp) {
+    //copy data to main time var
+    if (gsm_clock_was_set)
+      strlcpy(time_char, tmp, sizeof(time_char));
 
-  //copy data to main time var
-  if (gsm_clock_was_set)
-    strlcpy(time_char, tmpval, sizeof(time_char));
-
-  debug_print(F("gsm_get_time() result:"));
-  debug_print(time_char);
-
+    debug_print(F("gsm_get_time() result:"));
+    debug_print(time_char);
+  }
   debug_print(F("gsm_get_time() completed"));
 }
 
