@@ -1,5 +1,5 @@
 void sms_check() {
-  sms_check(0);
+  sms_check(30);
 }
 
 //check SMS
@@ -91,7 +91,7 @@ void sms_check(int max_count) {
       gsm_wait_for_reply(1,0);
     }
 
-    status_delay(20);
+    status_delay(5);
   }
 
   debug_print(F("sms_check() completed"));
@@ -429,4 +429,3 @@ void sms_send_msg(const char *cmd, const char *phone) {
 
   debug_print(F("sms_send_msg() completed"));
 }
-
