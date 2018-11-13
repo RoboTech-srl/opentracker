@@ -99,6 +99,9 @@ void collect_all_data(int ignitionState) {
   //get current time and add to this data packet
   gsm_get_time();
 
+  //convert to UTC (strip time zone info)
+  time_char[17] = 0;
+
   //attach time to data packet
   data_append_string(time_char);
 
