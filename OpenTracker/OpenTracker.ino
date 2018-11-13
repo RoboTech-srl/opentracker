@@ -87,14 +87,14 @@ settings config;
 void setup() {
   //common hardware initialization
   device_init();
-  
+
   debug_port.begin(115200);
   delay(2000);
 
   //initialize GSM and GPS hardware
   gsm_init();
   gps_init();
-  
+
   //initialize addon board hardware
   addon_init();
 
@@ -126,7 +126,7 @@ void setup() {
 #endif
 
   // reply to Alarm SMS command
-  if(config.alarm_on) {
+  if (config.alarm_on) {
     sms_send_msg("Alarm Activated", config.alarm_phone);
   }
 
@@ -156,7 +156,7 @@ void setup() {
 
   // ensure SMS command check at power on or reset
   sms_check();
-  
+
   // apply runtime debug option (USB console) after setup
   if (config.debug == 1)
     usb_console_restore();
@@ -165,13 +165,13 @@ void setup() {
 }
 
 void loop() {
-  if(save_config == 1) {
+  if (save_config == 1) {
     //config should be saved
     settings_save();
     save_config = 0;
   }
 
-  if(power_reboot == 1) {
+  if (power_reboot == 1) {
     //reboot unit
     reboot();
     power_reboot = 0;
@@ -187,56 +187,58 @@ void loop() {
   debug_print(IGNT_STAT);
 
   // detect transitions from engine on and off
-  if(IGNT_STAT == 0) {
-    if(engineRunning != 0) {
-      // engine started
-      engine_start = millis();
-      engineRunning = 0;
+  if (!ALWAYS_ON) {
+    if (IGNT_STAT == 0) {
+      if (engineRunning != 0) {
+        // engine started
+        engine_start = millis();
+        engineRunning = 0;
 
-      if(config.alarm_on == 1) {
-        sms_send_msg("Ignition ON", config.alarm_phone);
-      }
-      if(config.powersave == 1) {
-        // restore full speed for serial communication
-        cpu_full_speed();
-        gsm_open();
-      }
-    }
-  } else {
-    if(engineRunning != 1) {
-      // engine stopped
-      if(engineRunning == 0) {
-        engineRunningTime += (millis() - engine_start);
-        if(config.alarm_on == 1) {
-          sms_send_msg("Ignition OFF", config.alarm_phone);
+        if (config.alarm_on == 1) {
+          sms_send_msg("Ignition ON", config.alarm_phone);
         }
-        // force sending last data
-        interval_count = config.interval_send;
-        collect_data(IGNT_STAT);
-        send_data();
+        if (config.powersave == 1) {
+          // restore full speed for serial communication
+          cpu_full_speed();
+          gsm_open();
+        }
       }
-      engineRunning = 1;
-      // save power when engine is off
-      gsm_deactivate(); // ~20mA less
-      if(config.powersave == 1) {
-        gsm_close();
-        cpu_slow_down(); // ~20mA less
+    } else {
+      if (engineRunning != 1) {
+        // engine stopped
+        if (engineRunning == 0) {
+          engineRunningTime += (millis() - engine_start);
+          if (config.alarm_on == 1) {
+            sms_send_msg("Ignition OFF", config.alarm_phone);
+          }
+          // force sending last data
+          interval_count = config.interval_send;
+          collect_data(IGNT_STAT);
+          send_data();
+        }
+        engineRunning = 1;
+        // save power when engine is off
+        gsm_deactivate(); // ~20mA less
+        if (config.powersave == 1) {
+          gsm_close();
+          cpu_slow_down(); // ~20mA less
+        }
       }
     }
   }
 
-  if(!ENGINE_RUNNING_LOG_FAST_AS_POSSIBLE || IGNT_STAT != 0 || !SEND_DATA) {
+  if (!ENGINE_RUNNING_LOG_FAST_AS_POSSIBLE || ALWAYS_ON || IGNT_STAT != 0 || !SEND_DATA) {
     time_stop = millis();
-  
+
     //signed difference is good if less than MAX_LONG
-    time_diff = time_stop-time_start;
-    time_diff = config.interval-time_diff;
-  
+    time_diff = time_stop - time_start;
+    time_diff = config.interval - time_diff;
+
     debug_print(F("Sleeping for:"));
     debug_print(time_diff);
     debug_print(F("ms"));
-  
-    if(time_diff < 1000) {
+
+    if (time_diff < 1000) {
       addon_delay(1000); // minimal wait to let addon code execute
     } else {
       addon_delay(time_diff);
@@ -248,8 +250,8 @@ void loop() {
   //start counting time
   time_start = millis();
 
-  if(ALWAYS_ON || IGNT_STAT == 0) {
-    if(IGNT_STAT == 0) {
+  if (ALWAYS_ON || IGNT_STAT == 0) {
+    if (IGNT_STAT == 0) {
       debug_print(F("Ignition is ON!"));
       // Insert here only code that should be processed when Ignition is ON
     }
@@ -265,28 +267,28 @@ void loop() {
 
       // facilitate SMS exchange by turning off data session
       gsm_deactivate();
-      
+
       sms_check();
     }
 #endif
   } else {
     debug_print(F("Ignition is OFF!"));
     // Insert here only code that should be processed when Ignition is OFF
-    
+
 #if SMS_CHECK_INTERVAL_COUNT > 0
     // perform SMS check
     if (++sms_check_count >= SMS_CHECK_INTERVAL_COUNT) {
       sms_check_count = 0;
-      
-      if(config.powersave == 1) {
+
+      if (config.powersave == 1) {
         // restore full speed for serial communication
         cpu_full_speed();
         gsm_open();
       }
-      
+
       sms_check();
-      
-      if(config.powersave == 1) {
+
+      if (config.powersave == 1) {
         // back to power saving
         gsm_close();
         cpu_slow_down();
@@ -294,11 +296,11 @@ void loop() {
     }
 #endif
   }
-    
+
   status_led();
 
   debug_check_input();
-  
+
   addon_loop();
 }
 
@@ -336,7 +338,7 @@ void device_init() {
 
   pinMode(PIN_C_OUT_CS, OUTPUT);
   pinMode(PIN_C_ACC_CS, OUTPUT);
-  
+
   digitalWrite(PIN_C_OUT_CS, HIGH);
   digitalWrite(PIN_C_ACC_CS, HIGH);
 #endif
@@ -347,10 +349,10 @@ void debug_check_input() {
 #if DEBUG > 1
 #warning "Do not use DEBUG=2 in production code!"
 
-  if(!debug_enable)
+  if (!debug_enable)
     return;
-    
-  while(debug_port.available()) {
+
+  while (debug_port.available()) {
     int c = debug_port.read();
     debug_port.print(F("debug_check_input() got: "));
     debug_port.println((char)c);
@@ -382,7 +384,7 @@ void debug_check_input() {
 void debug_gsm_terminal()
 {
   debug_port.print(F("Started GSM terminal"));
-  for(;;) {
+  for (;;) {
     int c = debug_port.read();
     if (c == '^') break;
     if (c > 0)
@@ -397,7 +399,7 @@ void debug_gsm_terminal()
 void debug_gps_terminal()
 {
   debug_port.print(F("Started GPS terminal"));
-  for(;;) {
+  for (;;) {
     int c = debug_port.read();
     if (c == '|') break;
     if (c > 0)
@@ -408,4 +410,3 @@ void debug_gps_terminal()
   }
   debug_port.print(F("Exited GPS terminal"));
 }
-
