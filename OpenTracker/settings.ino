@@ -2,6 +2,7 @@
 void settings_load() {
   //load all settings from EEPROM
   byte tmp;
+  int defaults = 0;
 
   debug_print(F("settings_load() started"));
 
@@ -31,6 +32,7 @@ void settings_load() {
 
     config.first_run = 1;  //set first run flag
     save_config = 1;
+    defaults = 1;
   }
 
   //setting defaults in case something is incorrect
@@ -150,7 +152,7 @@ void settings_load() {
   }
 
   // let addon load its own settings (or initialize defaults)
-  if(config.first_run == 1)
+  if(defaults == 1)
     addon_event(ON_SETTINGS_DEFAULT);
   else
     addon_event(ON_SETTINGS_LOAD);
@@ -177,4 +179,3 @@ int settings_compare(size_t offset, size_t len) {
   byte* b = dueFlashStorage.readAddress(STORAGE_CONFIG_MAIN);
   return memcmp((byte*)&config + offset, b + offset, len);
 }
-
