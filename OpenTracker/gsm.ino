@@ -228,21 +228,46 @@ void gsm_config() {
   //misc GSM startup commands (disable echo)
   gsm_startup_cmd();
 
-  // wait for network availability (max 30s)
-  gsm_wait_network_ready(30000);
+  // wait for network availability (max 60s)
+  gsm_wait_network_ready(60000);
 
-  // informational only
-  gsm_port.print("AT+COPS?\r");
-  gsm_wait_for_reply(1,0);
+  gsm_print_signal_info(2); // debug
 
   //set GSM APN
   gsm_set_apn();
+}
+
+void gsm_print_signal_info(int longer) {
+  // informational only
+  gsm_port.print("AT+CSQ\r");
+  gsm_wait_for_reply(1,0);
+  if (longer > 0) {
+    gsm_port.print("AT+COPS?\r");
+    gsm_wait_for_reply(1,0);
+#if MODEM_BG96
+    gsm_port.print("AT+QNWINFO\r");
+    gsm_wait_for_reply(1,0);
+#endif
+#if MODEM_CMDSET
+    gsm_port.print("AT+QENG=\"servingcell\"\r");
+    gsm_wait_for_reply(1,0);
+#else
+    gsm_port.print("AT+QENG=1,0\r");
+    gsm_wait_for_reply(1,0);
+#endif
+  }
+  if (longer > 1) {
+    gsm_port.print("AT+COPS=?\r");
+    gsm_wait_for_reply(1,0);
+  }
 }
 
 void gsm_wait_modem_ready(int timeout) {
   // wait for modem ready (attached to network)
   unsigned long t = millis();
   do {
+    gsm_print_signal_info(0); // debug
+
     int pas = gsm_get_modem_status();
     if(pas==0 || pas==3 || pas==4) break;
     status_delay(3000);
@@ -254,6 +279,8 @@ void gsm_wait_network_ready(int timeout) {
   // wait for modem ready (attached to network)
   unsigned long t = millis();
   do {
+    gsm_print_signal_info(1); // debug
+
     int reg = gsm_get_network_status();
     if(reg==1 || reg==5 || reg==3) break;
     status_delay(3000);
@@ -795,6 +822,8 @@ int gsm_connect() {
         debug_print(HOSTNAME);
         // debug only:
         gsm_port.print("AT+CEER\r");
+        gsm_wait_for_reply(1,0);
+        gsm_port.print("AT+QIGETERROR\r");
         gsm_wait_for_reply(1,0);
       }
     }
