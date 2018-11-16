@@ -666,7 +666,7 @@ int gsm_get_connection_status() {
       if (ret == 2)
 #endif
         ret = 1; // already connected
-      else if (ret > 0)
+      else
         ret = 2; // previous connection failed, should close
     }
     
