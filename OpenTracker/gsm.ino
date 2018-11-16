@@ -212,6 +212,23 @@ void gsm_setup() {
   debug_print(F("gsm_setup() completed"));
 }
 
+void gsm_enable_time_sync() {
+  // disable time-sync reports
+  gsm_port.print("AT+CTZR=0\r");
+  gsm_wait_for_reply(1,0);
+
+  // enable GSM time synchronization
+#if MODEM_M95
+  gsm_port.print("AT+QNITZ=1\r");
+  gsm_wait_for_reply(1,0);
+
+  gsm_port.print("AT+CTZU=2\r");
+#else
+  gsm_port.print("AT+CTZU=1\r");
+#endif
+  gsm_wait_for_reply(1,0);
+}
+
 void gsm_config() {
   //supply PIN code if needed
   gsm_set_pin();
@@ -225,16 +242,17 @@ void gsm_config() {
   //get GSM IMEI
   gsm_get_imei();
 
+  //enable synchronization to GSM time
+  gsm_enable_time_sync();
+
   //misc GSM startup commands (disable echo)
   gsm_startup_cmd();
 
   // wait for network availability (max 60s)
   gsm_wait_network_ready(60000);
 
-  gsm_print_signal_info(2); // debug
-
-  //set GSM APN
-  gsm_set_apn();
+  //synchronize modem clock
+  gsm_check_time_sync();
 }
 
 void gsm_print_signal_info(int longer) {
@@ -302,6 +320,16 @@ void gsm_set_time() {
   gsm_clock_was_set = true;
 
   debug_print(F("gsm_set_time() completed"));
+}
+
+void gsm_check_time_sync() {
+  gsm_port.print("AT+QLTS\r");
+  gsm_wait_for_reply(1,1);
+
+  if (strstr(modem_reply, "+QLTS:") != NULL)
+    gsm_clock_was_set = true;
+
+  gsm_get_time();
 }
 
 void gsm_set_pin() {
@@ -1494,6 +1522,10 @@ int gsm_get_queclocator()
 #ifdef GSM_USE_NTP_SERVER
 void gsm_ntp_update()
 {
+  if (gsm_clock_was_set) {
+    debug_print(F("gsm_ntp_update() skipped"));
+    return;
+  }
   debug_print(F("gsm_ntp_update() started"));
 
   gsm_port.print(AT_NTP "\"");

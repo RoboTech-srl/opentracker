@@ -133,6 +133,9 @@ void setup() {
   // make sure we start with empty data
   data_reset();
 
+  //set GSM APN
+  gsm_set_apn();
+
 #ifdef KNOWN_APN_LIST
   // only with a new SIM
   if (settings_compare(offsetof(settings, iccid), strlen(config.iccid))) {
