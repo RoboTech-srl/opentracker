@@ -9,7 +9,7 @@ void sms_check(int max_count) {
   char phone[32] = "";
   char msg[160];
 
-  debug_print(F("sms_check() started"));
+  DEBUG_FUNCTION_CALL();
 
   if (max_count >= 0) {
   gsm_get_reply(1); // clear buffer
@@ -25,8 +25,8 @@ void sms_check(int max_count) {
         tmp = strtok(NULL, ",\"");
         if(tmp!=NULL) {
           msg_count = atoi(tmp);
-          debug_print(F("SMS storage total:"));
-          debug_print(msg_count);
+          DEBUG_PRINT("SMS storage total: ");
+          DEBUG_PRINTLN(msg_count);
         }
       }
     }
@@ -60,8 +60,8 @@ void sms_check(int max_count) {
         tmp = strtok(tmp, "\",\"");
         if(tmp!=NULL) {
           strlcpy(phone, tmp, sizeof(phone));
-          debug_print(F("Phone:"));
-          debug_print(phone);
+          DEBUG_PRINT("Phone: ");
+          DEBUG_PRINTLN(phone);
         }
 
         // find end of commands
@@ -73,14 +73,14 @@ void sms_check(int max_count) {
           
           //next data is probably command till \r
           //all data before "," is sms password, the rest is command
-          debug_print(F("SMS command found"));
-          debug_print(msg);
+          DEBUG_PRINT("SMS command found: ");
+          DEBUG_PRINTLN(msg);
 
           sms_cmd(msg, phone);
         }
       }
       
-      debug_print(F("Delete message"));
+      DEBUG_PRINT("Delete message");
     
       gsm_get_reply(1); // clear buffer
   
@@ -93,15 +93,13 @@ void sms_check(int max_count) {
 
     status_delay(5);
   }
-
-  debug_print(F("sms_check() completed"));
 }
 
 void sms_cmd(char *msg, char *phone) {
   char *tmp;
   int i=0;
 
-  debug_print(F("sms_cmd() started"));
+  DEBUG_FUNCTION_CALL();
 
   //command separated by "," format: password,command=value
   tmp = strtok(msg, ",");
@@ -121,10 +119,10 @@ void sms_cmd(char *msg, char *phone) {
       if(strcmp(tmp, config.sms_key) != 0)
         auth = false;
       if(auth) {
-        debug_print(F("sms_cmd(): SMS password accepted, executing commands from"));
-        debug_print(phone);
+        DEBUG_FUNCTION_PRINT("SMS password accepted, executing commands from ");
+        DEBUG_PRINTLN(phone);
       } else {
-        debug_print(F("sms_cmd(): SMS password failed, ignoring commands"));
+        DEBUG_FUNCTION_PRINTLN("SMS password failed, ignoring commands");
         break;
       }
     } else {
@@ -133,8 +131,6 @@ void sms_cmd(char *msg, char *phone) {
     tmp = strtok(NULL, ",\r\n");
     i++;
   }
-
-  debug_print(F("sms_cmd() completed"));
 }
 
 void sms_cmd_run(char *cmd, char *phone) {
@@ -144,7 +140,7 @@ void sms_cmd_run(char *cmd, char *phone) {
 
   char msg[160];
 
-  debug_print(F("sms_cmd_run() started"));
+  DEBUG_FUNCTION_CALL();
 
   //checking what command to execute
   cmd = strtok_r(cmd, "=", &tmpcmd);
@@ -152,20 +148,20 @@ void sms_cmd_run(char *cmd, char *phone) {
     //get argument (if any)
     tmp = strtok_r(NULL, ",\r", &tmpcmd);
   }
-  debug_print(cmd);
-  debug_print(tmp);
+  DEBUG_PRINTLN(cmd);
+  DEBUG_PRINTLN(tmp);
   
   //set APN
   if(strcmp(cmd,"apn") == 0) {
     //setting new APN
-    debug_print(F("sms_cmd_run(): New APN:"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New APN=");
+    DEBUG_PRINTLN(tmp);
 
     //updating APN in config
     strlcpy(config.apn, tmp, sizeof(config.apn));
 
-    debug_print(F("New APN configured:"));
-    debug_print(config.apn);
+    DEBUG_PRINT("New APN configured: ");
+    DEBUG_PRINTLN(config.apn);
 
     save_config=1;
     power_reboot=1;
@@ -177,14 +173,14 @@ void sms_cmd_run(char *cmd, char *phone) {
   //APN password
   if(strcmp(cmd, "gprspass") == 0) {
     //setting new APN pass
-    debug_print(F("sms_cmd_run(): New APN pass:"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New APN pass=");
+    DEBUG_PRINTLN(tmp);
 
     //updating in config
     strlcpy(config.pwd, tmp, sizeof(config.pwd));
 
-    debug_print(F("New APN pass configured:"));
-    debug_print(config.pwd);
+    DEBUG_PRINT("New APN pass configured: ");
+    DEBUG_PRINTLN(config.pwd);
 
     save_config=1;
     power_reboot=1;
@@ -196,14 +192,14 @@ void sms_cmd_run(char *cmd, char *phone) {
   //APN username
   if(strcmp(cmd, "gprsuser") == 0) {
     //setting new APN
-    debug_print(F("sms_cmd_run(): New APN user:"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New APN user=");
+    DEBUG_PRINTLN(tmp);
 
     //updating APN in config
     strlcpy(config.user, tmp, sizeof(config.user));
 
-    debug_print(F("New APN user configured:"));
-    debug_print(config.user);
+    DEBUG_PRINT("New APN user configured: ");
+    DEBUG_PRINTLN(config.user);
 
     save_config=1;
     power_reboot=1;
@@ -215,14 +211,14 @@ void sms_cmd_run(char *cmd, char *phone) {
   //SMS pass
   if(strcmp(cmd, "smspass") == 0) {
     //setting new APN
-    debug_print(F("sms_cmd_run(): New smspass:"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New smspass=");
+    DEBUG_PRINTLN(tmp);
 
     //updating APN in config
     strlcpy(config.sms_key, tmp, sizeof(config.sms_key));
 
-    debug_print(F("New sms_key configured:"));
-    debug_print(config.sms_key);
+    DEBUG_PRINT("New sms_key configured: ");
+    DEBUG_PRINTLN(config.sms_key);
 
     save_config=1;
 
@@ -233,14 +229,14 @@ void sms_cmd_run(char *cmd, char *phone) {
   //PIN
   if(strcmp(cmd, "pin") == 0) {
     //setting new APN
-    debug_print(F("sms_cmd_run(): New pin:"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New pin=");
+    DEBUG_PRINTLN(tmp);
 
     //updating pin in config
     strlcpy(config.sim_pin, tmp, sizeof(config.sim_pin));
 
-    debug_print(F("New sim_pin configured:"));
-    debug_print(config.sim_pin);
+    DEBUG_PRINT("New sim_pin configured: ");
+    DEBUG_PRINTLN(config.sim_pin);
 
     save_config=1;
     power_reboot=1;
@@ -252,8 +248,8 @@ void sms_cmd_run(char *cmd, char *phone) {
   //alarm
   if(strcmp(cmd, "alarm") == 0) {
     //setting alarm
-    debug_print(F("sms_cmd_run(): Alarm:"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New Alarm=");
+    DEBUG_PRINTLN(tmp);
     if(strcmp(tmp, "off") == 0) {
       config.alarm_on = 0;
     } else if(strcmp(tmp, "on") == 0) {
@@ -261,8 +257,8 @@ void sms_cmd_run(char *cmd, char *phone) {
     }
     //updating alarm phone
     strlcpy(config.alarm_phone, phone, sizeof(config.alarm_phone));
-    debug_print(F("New alarm_phone configured:"));
-    debug_print(config.alarm_phone);
+    DEBUG_PRINT("New alarm_phone configured: ");
+    DEBUG_PRINTLN(config.alarm_phone);
     save_config = 1;
     //send SMS reply
     if(config.alarm_on) {
@@ -275,8 +271,8 @@ void sms_cmd_run(char *cmd, char *phone) {
   //interval
   if(strcmp(cmd, "int") == 0) {
     //setting new APN
-    debug_print(F("sms_cmd_run(): New interval:"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New interval=");
+    DEBUG_PRINTLN(tmp);
 
     val = atol(tmp);
 
@@ -284,18 +280,20 @@ void sms_cmd_run(char *cmd, char *phone) {
       //updating interval in config (convert to milliseconds)
       config.interval = val*1000;
 
-      debug_print(F("New interval configured:"));
-      debug_print(config.interval);
+      DEBUG_PRINT("New interval configured: ");
+      DEBUG_PRINTLN(config.interval);
 
       save_config=1;
 
       //send SMS reply
       sms_send_msg("Interval saved", phone);
-    } else debug_print(F("sms_cmd_run(): invalid value"));
+    }
+    else
+      DEBUG_FUNCTION_PRINT("invalid value");
   }
   else
   if(strcmp(cmd, "locate") == 0) {
-    debug_print(F("sms_cmd_run(): Locate command detected"));
+    DEBUG_FUNCTION_PRINTLN("Locate command detected");
 
     if(LOCATE_COMMAND_FORMAT_IOS) {
       snprintf(msg,sizeof(msg),"comgooglemaps://?center=%s,%s",lat_current,lon_current);
@@ -306,15 +304,15 @@ void sms_cmd_run(char *cmd, char *phone) {
   }
   else
   if(strcmp(cmd, "tomtom") == 0) {
-    debug_print(F("sms_cmd_run(): TomTom command detected"));
+    DEBUG_FUNCTION_PRINTLN("TomTom command detected");
 
     snprintf(msg,sizeof(msg),"tomtomhome://geo:lat=%s&long=%s",lat_current,lon_current);
     sms_send_msg(msg, phone);
   }
   else
   if(strcmp(cmd, "data") == 0) {
-    debug_print(F("sms_cmd_run(): Data command detected"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New Data=");
+    DEBUG_PRINTLN(tmp);
     if(strcmp(tmp, "off") == 0) {
       SEND_DATA = 0;
     } else if(strcmp(tmp, "on") == 0) {
@@ -329,7 +327,7 @@ void sms_cmd_run(char *cmd, char *phone) {
   }
   else
   if(strcmp(cmd, "getimei") == 0) {
-    debug_print(F("sms_cmd_run(): Get IMEI command detected"));
+    DEBUG_FUNCTION_PRINTLN("Get IMEI command detected");
     snprintf(msg,sizeof(msg),"IMEI: %s",config.imei);
     sms_send_msg(msg, phone);
   }
@@ -337,15 +335,17 @@ void sms_cmd_run(char *cmd, char *phone) {
   else
   if(strcmp(cmd, "queclocator") == 0) {
     //setting alarm
-    debug_print(F("sms_cmd_run(): QuecLocator"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New QuecLocator=");
+    DEBUG_PRINTLN(tmp);
     if(strcmp(tmp, "off") == 0) {
       config.queclocator = 0;
       save_config = 1;
-   } else if(strcmp(tmp, "on") == 0) {
+    } else if(strcmp(tmp, "on") == 0) {
       config.queclocator = 1;
       save_config = 1;
     }
+    else
+      DEBUG_FUNCTION_PRINTLN("invalid value");
     //send SMS reply
     if(config.queclocator) {
       sms_send_msg("QuecLocator is ON", phone);
@@ -357,8 +357,8 @@ void sms_cmd_run(char *cmd, char *phone) {
 #if DEBUG
   else
   if(strcmp(cmd, "debug") == 0) {
-    debug_print(F("sms_cmd_run(): Debug command detected"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New Debug=");
+    DEBUG_PRINTLN(tmp);
     if(strcmp(tmp, "off") == 0) {
       config.debug = 0;
       save_config = 1;
@@ -366,6 +366,8 @@ void sms_cmd_run(char *cmd, char *phone) {
       config.debug = 1;
       save_config = 1;
     }
+    else
+      DEBUG_FUNCTION_PRINTLN("invalid value");
     //send SMS reply
     if (config.debug == 1) {
       usb_console_restore();
@@ -378,8 +380,8 @@ void sms_cmd_run(char *cmd, char *phone) {
 #endif
   else
   if(strcmp(cmd, "powersave") == 0) {
-    debug_print(F("sms_cmd_run(): Powersave command detected"));
-    debug_print(tmp);
+    DEBUG_FUNCTION_PRINT("New Powersave=");
+    DEBUG_PRINTLN(tmp);
     if(strcmp(tmp, "off") == 0) {
       config.powersave = 0;
       save_config = 1;
@@ -387,6 +389,8 @@ void sms_cmd_run(char *cmd, char *phone) {
       config.powersave = 1;
       save_config = 1;
     }
+    else
+      DEBUG_FUNCTION_PRINTLN("invalid value");
     //send SMS reply
     if (config.powersave == 1) {
       sms_send_msg("Powersave ON", phone);
@@ -396,19 +400,17 @@ void sms_cmd_run(char *cmd, char *phone) {
   }
   else
     addon_sms_command(cmd, tmp, phone);
-
-  debug_print(F("sms_cmd_run() completed"));
 }
 
 void sms_send_msg(const char *cmd, const char *phone) {
   //send SMS message to number
-  debug_print(F("sms_send_msg() started"));
+  DEBUG_FUNCTION_CALL();
 
   gsm_get_reply(1); // clear buffer
 
-  debug_print(F("Sending SMS to:"));
-  debug_print(phone);
-  debug_print(cmd);
+  DEBUG_PRINT("Sending SMS to:");
+  DEBUG_PRINTLN(phone);
+  DEBUG_PRINTLN(cmd);
 
   gsm_port.print("AT+CMGS=\"");
   gsm_port.print(phone);
@@ -418,7 +420,7 @@ void sms_send_msg(const char *cmd, const char *phone) {
 
   const char *tmp = strstr(modem_reply, ">");
   if(tmp!=NULL) {
-    debug_print(F("Modem replied with >"));
+    DEBUG_PRINT("Modem replied with >");
     gsm_port.print(cmd);
 
     //sending ctrl+z
@@ -426,6 +428,4 @@ void sms_send_msg(const char *cmd, const char *phone) {
 
     gsm_wait_for_reply(1,0);
   }
-
-  debug_print(F("sms_send_msg() completed"));
 }

@@ -92,7 +92,7 @@ float analog_input_voltage(int pin, int range)
 * This is default collect data function for HTTP
 */
 void collect_all_data(int ignitionState) {
-  debug_print(F("collect_all_data() started"));
+  DEBUG_FUNCTION_CALL();
 
   data_field_restart();
   
@@ -122,7 +122,7 @@ void collect_all_data(int ignitionState) {
   {
     if (gsm_get_queclocator())
     {
-      debug_print("override missing GPS data with QuecLocator");
+      DEBUG_PRINTLN("override missing GPS data with QuecLocator");
 
       // construct GPS data packet
 
@@ -229,15 +229,13 @@ void collect_all_data(int ignitionState) {
 
   //end of data packet
   data_append_char('\n');
-
-  debug_print(F("collect_all_data() completed"));
 }
 
 /**
 * This function collects data for RAW TCP
 */
 void collect_all_data_raw(int ignitionState) {
-  debug_print(F("collect_all_data_raw() started"));
+  DEBUG_FUNCTION_CALL();
 
   data_field_restart();
 
@@ -297,38 +295,36 @@ void collect_all_data_raw(int ignitionState) {
 
   //end of data packet
   data_append_char('\n');
-
-  debug_print(F("collect_all_data_raw() completed"));
 }
 
 /**
  * This function send collected data using HTTP or TCP
  */
 void send_data() {
-  debug_print(F("send_data() started"));
-
-  debug_print(F("Current:"));
-  debug_print(data_current);
+  DEBUG_FUNCTION_CALL();
+  
+  DEBUG_PRINT("Current:");
+  DEBUG_PRINTLN(data_current);
 
   interval_count++;
-  debug_print(F("Data accumulated:"));
-  debug_print(interval_count);
+  DEBUG_PRINT("Data accumulated:");
+  DEBUG_PRINTLN(interval_count);
   
   // send accumulated data
   if (interval_count >= config.interval_send) {
     // if data send disabled, use storage
     if (!SEND_DATA) {
-      debug_print(F("Data send is turned off."));
+      DEBUG_PRINT("Data send is turned off.");
 #if STORAGE
       storage_save_current();   //in case this fails - data is lost
 #endif
     } else if (gsm_send_data() != 1) {
-      debug_print(F("Could not send data."));
+      DEBUG_PRINT("Could not send data.");
 #if STORAGE
       storage_save_current();   //in case this fails - data is lost
 #endif
     } else {
-      debug_print(F("Data sent successfully."));
+      DEBUG_PRINT("Data sent successfully.");
 #if STORAGE
       //connection seems ok, send saved data history
       storage_send_logs(1); // 0 = dump only, 1 = send data
@@ -339,5 +335,4 @@ void send_data() {
     data_reset();
     interval_count -= config.interval_send;
   }
-  debug_print(F("send_data() completed"));
 }

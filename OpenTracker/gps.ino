@@ -1,6 +1,6 @@
 
 void gps_init() {
-  debug_print(F("gps_init() started"));
+  DEBUG_FUNCTION_CALL();
 
 #ifdef PIN_STANDBY_GPS
   pinMode(PIN_STANDBY_GPS, OUTPUT);
@@ -11,8 +11,6 @@ void gps_init() {
   digitalWrite(PIN_RESET_GPS, LOW);
 
   gps_open();
-
-  debug_print(F("gps_init() completed"));
 }
 
 void gps_open() {
@@ -28,7 +26,7 @@ void gps_close() {
 }
 
 void gps_setup() {
-  debug_print(F("gps_setup() started"));
+  DEBUG_FUNCTION_CALL();
 
   gps_on();
   gps_wakeup();
@@ -44,29 +42,23 @@ void gps_setup() {
           debug_port.write(c);
       }
   }
-  if(millis() - t > 5000) debug_print(F("GPS not responding"));
-  
-  debug_print(F("gps_setup() completed"));
+  if(millis() - t > 5000) DEBUG_PRINT("GPS not responding");
 }
 
 void gps_on() {
   //turn off GPS
-  debug_print(F("gps_on() started"));
+  DEBUG_FUNCTION_CALL();
 
   delay(100);
   digitalWrite(PIN_RESET_GPS, LOW);
-
-  debug_print(F("gps_on() completed"));
 }
 
 void gps_off() {
   //turn off GPS
-  debug_print(F("gps_off() started"));
+  DEBUG_FUNCTION_CALL();
 
   digitalWrite(PIN_RESET_GPS, HIGH);
   delay(100);
-
-  debug_print(F("gps_off() completed"));
 }
 
 void gps_standby() {
@@ -106,13 +98,8 @@ void collect_gps_data() {
 
       //debug
       #ifdef DEBUG
-        debug_port.print(c);
+        debug_port.write(c);
       #endif
-
-      if(fix == 1) { //fix already acquired
-        debug_print(F("GPS already available, breaking"));
-        break;
-      }
 
       if(gps.encode(c)) {
         // process new gps info here
@@ -125,16 +112,16 @@ void collect_gps_data() {
 
         // check if timestamp and position are current (not from previous attempts)
         if(age_time == TinyGPS::GPS_INVALID_AGE || age_time > 1100) {
-          debug_print(F("Invalid date/time age, retrying."));
+          DEBUG_PRINT("Invalid date/time age, retrying.");
           continue;
         }
         if(age_pos == TinyGPS::GPS_INVALID_AGE || age_pos > 1100) {
-          debug_print(F("Invalid position age, retrying."));
+          DEBUG_PRINT("Invalid position age, retrying.");
           continue;
         }
         //check if this fix is already received
         if((last_time_gps == time_gps) && (last_date_gps == date_gps)) {
-          debug_print(F("Warning: this fix date/time already logged, retrying"));
+          DEBUG_PRINT("Warning: this fix date/time already logged, retrying");
           continue;
         }
 
@@ -142,7 +129,7 @@ void collect_gps_data() {
         float fkmph = gps.f_speed_kmph(); // speed in km/hr
         
         if(fkmph == TinyGPS::GPS_INVALID_F_SPEED) {
-          debug_print(F("Invalid speed, retrying."));
+          DEBUG_PRINT("Invalid speed, retrying.");
           continue;
         }
 #endif
@@ -150,7 +137,7 @@ void collect_gps_data() {
         float falt = gps.f_altitude(); // +/- altitude in meters
         
         if(falt == TinyGPS::GPS_INVALID_F_ALTITUDE) {
-          debug_print(F("Invalid altitude, retrying."));
+          DEBUG_PRINT("Invalid altitude, retrying.");
           continue;
         }
 #endif
@@ -158,7 +145,7 @@ void collect_gps_data() {
         float fc = gps.f_course(); // course in degrees
         
         if(fc == TinyGPS::GPS_INVALID_F_ANGLE) {
-          debug_print(F("Invalid course, retrying."));
+          DEBUG_PRINT("Invalid course, retrying.");
           continue;
         }
 #endif
@@ -166,7 +153,7 @@ void collect_gps_data() {
         unsigned long hdop = gps.hdop(); //hdop
         
         if(hdop == TinyGPS::GPS_INVALID_HDOP) {
-          debug_print(F("Invalid HDOP, retrying."));
+          DEBUG_PRINT("Invalid HDOP, retrying.");
           continue;
         }
 #endif    
@@ -174,12 +161,12 @@ void collect_gps_data() {
         long sats = gps.satellites(); //satellites
         
         if(sats == TinyGPS::GPS_INVALID_SATELLITES) {
-          debug_print(F("Invalid satellites, retrying."));
+          DEBUG_PRINT("Invalid satellites, retrying.");
           continue;
         }
 #endif      
 
-        debug_print(F("Valid GPS fix received."));
+        DEBUG_PRINT("Valid GPS fix received.");
         fix = 1;
         last_fix_gps = millis();
 
@@ -211,8 +198,8 @@ void collect_gps_data() {
         time_char[19] = '0';
         time_char[20] = '\0';
 
-        debug_print(F("Current time set from GPS time:"));
-        debug_print(time_char);
+        DEBUG_PRINT("Current time set from GPS time:");
+        DEBUG_PRINTLN(time_char);
 
         //set modem time from fresh fix
         gsm_set_time();
@@ -289,7 +276,7 @@ void collect_gps_data() {
 
     if(fix == 1) {
       //fix was found
-      debug_print(F("collect_gps_data(): fix acquired"));
+      DEBUG_FUNCTION_PRINTLN("Fix acquired");
       addon_event(ON_LOCATION_FIXED);
       break;
     } else {
@@ -299,11 +286,11 @@ void collect_gps_data() {
   } while ((signed long)(millis() - timer) < GPS_COLLECT_TIMEOUT * 1000);
 
   gps.stats(&chars, &sentences, &failed_checksum);
-  debug_print(F("Failed checksums:"));
-  debug_print(failed_checksum);
+  DEBUG_PRINT("Failed checksums:");
+  DEBUG_PRINTLN(failed_checksum);
 
   if(fix != 1) {
-    debug_print(F("collect_gps_data(): fix not acquired, given up."));
+    DEBUG_FUNCTION_PRINTLN("Fix not acquired, given up.");
     addon_event(ON_LOCATION_LOST);
   }
 }

@@ -11,11 +11,11 @@ int parse_receive_reply() {
   char *tmp;
   char cmd[100] = "";  //remote commands stored here
 
-  debug_print(F("parse_receive_reply() started"));
+  DEBUG_FUNCTION_CALL();
 
   addon_event(ON_RECEIVE_STARTED);
   if (gsm_get_modem_status() == 4) {
-    debug_print(F("parse_receive_reply(): call interrupted"));
+    DEBUG_FUNCTION_PRINTLN("call interrupted");
     return 0; // abort
   }
 
@@ -36,9 +36,9 @@ int parse_receive_reply() {
       int nread = (tmp != NULL) ? atoi(tmp) : -1;
       tmp = strtok(NULL, ",");
       int unred = (tmp != NULL) ? atoi(tmp) : -1;
-      debug_print(total);
-      debug_print(nread);
-      debug_print(unred);
+      DEBUG_PRINTLN(total);
+      DEBUG_PRINTLN(nread);
+      DEBUG_PRINTLN(unred);
       // no more data to read?
       if ((total == 0 && ++ntry > SERVER_REPLY_RETRY) || (unred == 0 && total != 0)) {
         if (gsm_get_connection_status() != 1)
@@ -60,7 +60,7 @@ int parse_receive_reply() {
     //do we have data?
     tmp = strstr(modem_reply, "ERROR");
     if(tmp!=NULL) {
-      debug_print(F("No more data available."));
+      DEBUG_PRINT("No more data available.");
       break;
     }
     
@@ -82,7 +82,7 @@ int parse_receive_reply() {
 
     // read data length
     len = atoi(tmp);
-    debug_print(len);
+    DEBUG_PRINTLN(len);
 
     // read full buffer (data)
     gsm_get_reply(1);
@@ -100,30 +100,30 @@ int parse_receive_reply() {
     if (len < sizeof(modem_reply) - 1)
       modem_reply[len] = '\0';
     else
-      debug_print(F("Warning: data exceeds modem receive buffer!"));
+      DEBUG_PRINT("Warning: data exceeds modem receive buffer!");
 
-    debug_print(header);
+    DEBUG_PRINTLN(header);
     if (header == 0) {
       tmp = strstr(modem_reply, "HTTP/1.");
       if(tmp!=NULL) {
-        debug_print(F("Found response"));
+        DEBUG_PRINT("Found response: ");
         header = 1;
 
         resp_code = atoi(&tmp[9]);
-        debug_print(resp_code);
+        DEBUG_PRINTLN(resp_code);
 #if PARSE_IGNORE_COMMANDS && PARSE_IGNORE_EOF
         // optimize and close connection earlier (without reading whole reply)
         break;
 #endif
       } else {
-        debug_print(F("Not and HTTP response!"));
+        DEBUG_PRINT("Not and HTTP response!");
         break;
       }
     } else if (header == 1) {
       // looking for end of headers
       tmp = strstr(modem_reply, "\r\n\r\n");
       if(tmp!=NULL) {
-        debug_print(F("End of header found!"));
+        DEBUG_PRINT("End of header found!");
         header = 2;
 
         //all data from this packet and all next packets can be commands
@@ -137,13 +137,13 @@ int parse_receive_reply() {
 	
     addon_event(ON_RECEIVE_DATA);
     if (gsm_get_modem_status() == 4) {
-      debug_print(F("parse_receive_reply(): call interrupted"));
+      DEBUG_FUNCTION_PRINTLN("call interrupted");
       return 0; // abort
     }
   }
 
 #if SEND_RAW
-  debug_print(F("RAW data mode enabled, not checking whether the packet was received or not."));
+  DEBUG_PRINT("RAW data mode enabled, not checking whether the packet was received or not.");
   ret = 1;
 
 #else // HTTP
@@ -175,13 +175,12 @@ int parse_receive_reply() {
   
   if (ret) {
     //all data was received by server
-    debug_print(F("Data was fully received by the server."));
+    DEBUG_PRINT("Data was fully received by the server.");
     addon_event(ON_RECEIVE_COMPLETED);
   } else {
-    debug_print(F("Data was not received by the server."));
+    DEBUG_PRINT("Data was not received by the server.");
     addon_event(ON_RECEIVE_FAILED);
   }
-  debug_print(F("parse_receive_reply() completed"));
 
   return ret;
 }
@@ -191,24 +190,24 @@ void parse_cmd(char *cmd) {
 
   char *tmp;
 
-  debug_print(F("parse_cmd() started"));
+  DEBUG_FUNCTION_CALL();
 
-  debug_print(F("Received commands:"));
-  debug_print(cmd);
+  DEBUG_PRINT("Received commands: ");
+  DEBUG_PRINTLN(cmd);
 
   //check for settime command (#t:13/01/11,09:43:50+00)
   tmp = strstr((cmd), "#t:");
   if(tmp!=NULL) {
-    debug_print(F("Found settime command."));
+    DEBUG_PRINT("Found settime command.");
 
     tmp += 3; //strlen("#t:");
     tmp = strtok(tmp, "\r\n");   //all commands end with \n
 
-    debug_print(tmp);
+    DEBUG_PRINTLN(tmp);
 
     if(strlen(tmp) == 20 && tmp[2] == '/' && tmp[5] == '/' && tmp[8] == ','
         && tmp[11] == ':' && tmp[14] == ':' && tmp[17] == '+') {
-      debug_print(F("Valid time string found."));
+      DEBUG_PRINT("Valid time string found.");
 
       //setting current time
       strlcpy(time_char, tmp, sizeof(time_char));
@@ -216,6 +215,4 @@ void parse_cmd(char *cmd) {
       gsm_set_time();
     }
   }
-
-  debug_print(F("parse_cmd() completed"));
 }

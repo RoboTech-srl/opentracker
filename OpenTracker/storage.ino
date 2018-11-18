@@ -1,12 +1,12 @@
 #define STORAGE_FREE_CHAR 255
 
 void storage_save_current() {
-  debug_print(F("storage_save_current() started"));
+  DEBUG_FUNCTION_CALL();
 
   int data_len = strlen(data_current) + 1; // include '\0' as block marker
   //check for flash limit
   if (logindex + data_len >= STORAGE_DATA_END) {
-    debug_print(F("storage_save_current(): flash memory is full, starting to overwrite"));
+    DEBUG_FUNCTION_PRINTLN("flash memory is full, starting to overwrite");
     logindex = STORAGE_DATA_START;
   }
   //adding index marker, it will be overwritten with next flash write
@@ -16,17 +16,16 @@ void storage_save_current() {
   dueFlashStorage.write(logindex, (byte*)data_current, data_len + 1);
   logindex += data_len;
 
-  debug_print(F("storage_save_current() ended"));
   //storage_dump();
 }
 
 void storage_get_index() {
   //storage_dump();
-  debug_print(F("storage_get_index() started"));
-  debug_port.print("storage start: 0x");
-  debug_port.println(FLASH_STORAGE_START, HEX);
-  debug_port.print("storage size: ");
-  debug_port.println(FLASH_STORAGE_SIZE);
+  DEBUG_FUNCTION_CALL();
+  DEBUG_PRINT("storage start: 0x");
+  DEBUG_PRINTLN(FLASH_STORAGE_START, HEX);
+  DEBUG_PRINT("storage size: ");
+  DEBUG_PRINTLN(FLASH_STORAGE_SIZE);
 
   //scan flash for current log position (new log writes will continue from there)
   byte *tmp = dueFlashStorage.readAddress(STORAGE_DATA_START);
@@ -39,7 +38,7 @@ void storage_get_index() {
       //found log index
       logindex = tmp - dueFlashStorage.readAddress(0);
 
-      debug_print(F("storage_get_index(): Found log position:"));
+      DEBUG_FUNCTION_PRINT("Found log position=");
       break;  //we only need first found index
     }
     ++tmp;
@@ -47,17 +46,15 @@ void storage_get_index() {
   if (tmp >= tmpend) { // probable corruption, re-initialize
     logindex = STORAGE_DATA_START;
     dueFlashStorage.write(logindex, STORAGE_FREE_CHAR);
-    debug_print(F("storage_get_index(): Not found, initialize log position:"));
+    DEBUG_FUNCTION_PRINTLN("Not found, initialize log position=");
   }
-  debug_print(logindex);
-
-  debug_print(F("storage_get_index() ended"));
+  DEBUG_PRINTLN(logindex);
 }
 
 void storage_send_logs(int really_send) {
   int num_sent = 0;
   
-  debug_print(F("storage_send_logs() started"));
+  DEBUG_FUNCTION_CALL();
 
   //check if some logs were saved
   uint32_t sent_position = logindex;  //empty set
@@ -69,7 +66,7 @@ void storage_send_logs(int really_send) {
       //found sent position
       sent_position = tmp - dueFlashStorage.readAddress(0);
 
-      debug_print(F("storage_send_logs(): Found log sent position:"));
+      DEBUG_FUNCTION_PRINT("Found log sent position: ");
       break;  //we only need first found index
     }
     ++tmp;
@@ -82,33 +79,33 @@ void storage_send_logs(int really_send) {
         //found sent position
         sent_position = tmp - dueFlashStorage.readAddress(0);
   
-        debug_print(F("storage_send_logs(): Found log sent position:"));
+        DEBUG_FUNCTION_PRINT("Found log sent position: ");
         break;  //we only need first found index
       }
       ++tmp;
     }
   }
-  debug_print(sent_position);
+  DEBUG_PRINTLN(sent_position);
 
   if (sent_position != logindex) {
     bool err = false;
     do {
-      debug_print(F("storage_send_logs(): Sending data from:"));
-      debug_print(sent_position);
+      DEBUG_FUNCTION_PRINT("Sending data from: ");
+      DEBUG_PRINTLN(sent_position);
       
       // read current block
       strlcpy(data_current, (char*)dueFlashStorage.readAddress(sent_position), sizeof(data_current));
       int data_len = strlen(data_current) + 1; // include string terminator (zero)
 
-      debug_print(F("Log data:"));
-      debug_print(data_current);
+      DEBUG_PRINT("Log data: ");
+      DEBUG_PRINTLN(data_current);
 
       if (!really_send) {
         sent_position += data_len;
       } else {
         // send block
         if (gsm_send_data() == 1) {
-          debug_print(F("storage_send_logs(): Success, erase sent data"));
+          DEBUG_FUNCTION_PRINTLN("Success, erase sent data");
     
           // erase block (after sent)
           dueFlashStorage.write(sent_position, STORAGE_FREE_CHAR, data_len);
@@ -116,7 +113,7 @@ void storage_send_logs(int really_send) {
           // apply send limit
           num_sent++;
           if (STORAGE_MAX_SEND_OLD > 0 && num_sent >= STORAGE_MAX_SEND_OLD) {
-            debug_print(F("storage_send_logs(): reached send limit"));
+            DEBUG_FUNCTION_PRINTLN("Reached send limit");
             break;
           }
         } else {
@@ -125,45 +122,40 @@ void storage_send_logs(int really_send) {
         }
       }
       if (sent_position >= STORAGE_DATA_END) {
-        debug_print(F("storage_send_logs(): Wrap around sending data"));
+        DEBUG_FUNCTION_PRINTLN("Wrap around sending data");
         sent_position = STORAGE_DATA_START;
       }
     } while (dueFlashStorage.read(sent_position) != STORAGE_FREE_CHAR);
   
     if (!err) {
-      debug_print(F("storage_send_logs(): Logs were sent successfully"));
+      DEBUG_FUNCTION_PRINTLN("Logs were sent successfully");
     } else {
-      debug_print(F("storage_send_logs(): Error sending logs"));
+      DEBUG_FUNCTION_PRINTLN("Error sending logs");
     }
   } else {
-    debug_print(F("storage_send_logs(): No logs present"));
+    DEBUG_FUNCTION_PRINTLN("No logs present");
   }
-
-  debug_print(F("storage_send_logs() ended"));
 }
 
 void storage_dump() {
-  debug_print(F("storage_dump() started"));
-  debug_port.print(F("start = "));
-  debug_print(STORAGE_DATA_START);
-  debug_port.print(F("end = "));
-  debug_print(STORAGE_DATA_END);
-  debug_port.print(F("logindex = "));
-  debug_print(logindex);
+  DEBUG_FUNCTION_CALL();
+  DEBUG_PRINT("start = ");
+  DEBUG_PRINTLN(STORAGE_DATA_START);
+  DEBUG_PRINT("end = ");
+  DEBUG_PRINTLN(STORAGE_DATA_END);
+  DEBUG_PRINT("logindex = ");
+  DEBUG_PRINTLN(logindex);
   byte *tmp = dueFlashStorage.readAddress(STORAGE_DATA_START);
   byte *tmpend = dueFlashStorage.readAddress(STORAGE_DATA_END);
   int k=0;
   char buf[10];
   while (tmp < tmpend) {
     if ((k & 31) == 0)
-      debug_port.println();
+      DEBUG_PRINTLN();
     snprintf(buf, 10, "%02X", *tmp);
-    debug_port.print(buf);
+    DEBUG_PRINT(buf);
     ++k;
     ++tmp;
   }
-  debug_port.println();
-
-  debug_print(F("storage_dump() ended"));
+  DEBUG_PRINTLN();
 }
-

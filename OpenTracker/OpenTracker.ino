@@ -1,5 +1,9 @@
 //tracker config
 #include "tracker.h"
+
+#define debug_port SerialUSB
+#include "debug.h"
+
 #include "addon.h"
 
 //External libraries
@@ -10,12 +14,6 @@
 #define dtostrf(val, width, prec, sout) (void) sprintf(sout, "%" #width "." #prec "f", (double)val)
 
 bool debug_enable = true; // runtime flag to disable debug console
-
-#if DEBUG
-#define debug_print(...)  do { if(debug_enable) debug_port.println(__VA_ARGS__); } while(0)
-#else
-#define debug_print(...)
-#endif
 
 #if SEND_RAW
 #define collect_data(i)  collect_all_data_raw(i);
@@ -81,7 +79,6 @@ settings config;
 
 //define serial ports
 #define gps_port Serial1
-#define debug_port SerialUSB
 #define gsm_port Serial2
 
 void setup() {
@@ -99,7 +96,7 @@ void setup() {
   addon_init();
 
   //setting debug serial port
-  debug_print(F("setup() started"));
+  DEBUG_FUNCTION_CALL();
 
   //blink software start
   blink_start();
@@ -155,7 +152,7 @@ void setup() {
   // setup addon board functionalities
   addon_setup();
 
-  debug_print(F("setup() completed"));
+  DEBUG_FUNCTION_PRINTLN("before loop");
 
   // ensure SMS command check at power on or reset
   sms_check();
@@ -186,8 +183,8 @@ void loop() {
 
   // Check if ignition is turned on
   int IGNT_STAT = digitalRead(PIN_S_DETECT);
-  debug_print(F("Ignition status:"));
-  debug_print(IGNT_STAT);
+  DEBUG_PRINT("Ignition status:");
+  DEBUG_PRINTLN(IGNT_STAT);
 
   // detect transitions from engine on and off
   if (!ALWAYS_ON) {
@@ -237,9 +234,9 @@ void loop() {
     time_diff = time_stop - time_start;
     time_diff = config.interval - time_diff;
 
-    debug_print(F("Sleeping for:"));
-    debug_print(time_diff);
-    debug_print(F("ms"));
+    DEBUG_PRINT("Sleeping for:");
+    DEBUG_PRINTLN(time_diff);
+    DEBUG_PRINT("ms");
 
     if (time_diff < 1000) {
       addon_delay(1000); // minimal wait to let addon code execute
@@ -255,7 +252,7 @@ void loop() {
 
   if (ALWAYS_ON || IGNT_STAT == 0) {
     if (IGNT_STAT == 0) {
-      debug_print(F("Ignition is ON!"));
+      DEBUG_PRINT("Ignition is ON!");
       // Insert here only code that should be processed when Ignition is ON
     }
 
@@ -275,7 +272,7 @@ void loop() {
     }
 #endif
   } else {
-    debug_print(F("Ignition is OFF!"));
+    DEBUG_PRINT("Ignition is OFF!");
     // Insert here only code that should be processed when Ignition is OFF
 
 #if SMS_CHECK_INTERVAL_COUNT > 0
@@ -357,8 +354,8 @@ void debug_check_input() {
 
   while (debug_port.available()) {
     int c = debug_port.read();
-    debug_port.print(F("debug_check_input() got: "));
-    debug_port.println((char)c);
+    DEBUG_FUNCTION_PRINT("Got: ");
+    DEBUG_FUNCTION_PRINTLN((char)c);
     switch (c)
     {
     case 'r':
@@ -386,7 +383,7 @@ void debug_check_input() {
 
 void debug_gsm_terminal()
 {
-  debug_port.print(F("Started GSM terminal"));
+  DEBUG_FUNCTION_CALL();
   for (;;) {
     int c = debug_port.read();
     if (c == '^') break;
@@ -396,12 +393,11 @@ void debug_gsm_terminal()
     if (c > 0)
       debug_port.write(c);
   }
-  debug_port.print(F("Exited GSM terminal"));
 }
 
 void debug_gps_terminal()
 {
-  debug_port.print(F("Started GPS terminal"));
+  DEBUG_FUNCTION_CALL();
   for (;;) {
     int c = debug_port.read();
     if (c == '|') break;
@@ -411,5 +407,4 @@ void debug_gps_terminal()
     if (c > 0)
       debug_port.write(c);
   }
-  debug_port.print(F("Exited GPS terminal"));
 }

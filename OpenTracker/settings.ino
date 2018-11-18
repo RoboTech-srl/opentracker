@@ -4,17 +4,17 @@ void settings_load() {
   byte tmp;
   int defaults = 0;
 
-  debug_print(F("settings_load() started"));
+  DEBUG_FUNCTION_CALL();
 
   byte* b = dueFlashStorage.readAddress(STORAGE_CONFIG_MAIN); // byte array which is read from flash at adress
   memcpy(&config, b, sizeof(settings)); // copy byte array to temporary struct
 
-  debug_print(F("settings_load(): First run flag:"));
-  debug_print(config.first_run);
+  DEBUG_FUNCTION_PRINT("First run flag=");
+  DEBUG_PRINTLN(config.first_run);
 
   if(config.first_run != 1) {
     //first run was not set, this is first even run of the board use config from tracker.h
-    debug_print(F("settings_load(): first run, using defaults"));
+    DEBUG_FUNCTION_PRINTLN("first run, using defaults");
     config.interval = INTERVAL;
     config.interval_send = INTERVAL_SEND;
     config.powersave = POWERSAVE;
@@ -36,117 +36,117 @@ void settings_load() {
   }
 
   //setting defaults in case something is incorrect
-  debug_print(F("settings_load(): config.interval:"));
-  debug_print(config.interval);
+  DEBUG_FUNCTION_PRINT("config.interval=");
+  DEBUG_PRINTLN(config.interval);
 
   if((config.interval == -1) || (config.interval < 0) || (config.interval > 5184000)) {
-    debug_print(F("settings_load(): interval not found, setting default"));
+    DEBUG_FUNCTION_PRINTLN("interval not found, setting default");
     config.interval = INTERVAL;
     save_config = 1;
 
-    debug_print(F("settings_load(): set config.interval:"));
-    debug_print(config.interval);
+    DEBUG_FUNCTION_PRINT("set config.interval=");
+    DEBUG_PRINTLN(config.interval);
   }
 
   //interval send
-  debug_print(F("settings_load(): config.interval_send:"));
-  debug_print(config.interval_send);
+  DEBUG_FUNCTION_PRINT("config.interval_send=");
+  DEBUG_PRINTLN(config.interval_send);
 
   if((config.interval_send == -1) || (config.interval_send < 0) || (config.interval_send > 100)) {
-    debug_print(F("settings_load(): interval_send not found, setting default"));
+    DEBUG_FUNCTION_PRINTLN("interval_send not found, setting default");
     config.interval_send = INTERVAL_SEND;
     save_config = 1;
 
-    debug_print(F("settings_load(): set config.interval_send:"));
-    debug_print(config.interval_send);
+    DEBUG_FUNCTION_PRINT("set config.interval_send=");
+    DEBUG_PRINTLN(config.interval_send);
   }
 
   //powersave
-  debug_print(F("settings_load(): config.powersave:"));
-  debug_print(config.powersave);
+  DEBUG_FUNCTION_PRINT("config.powersave=");
+  DEBUG_PRINTLN(config.powersave);
 
   if((config.powersave != 1) && (config.powersave != 0)) {
-    debug_print(F("settings_load(): powersave not found, setting default"));
+    DEBUG_FUNCTION_PRINTLN("powersave not found, setting default");
     config.powersave = POWERSAVE;
     save_config = 1;
 
-    debug_print(F("settings_load(): set config.powersave:"));
-    debug_print(config.powersave);
+    DEBUG_FUNCTION_PRINT("set config.powersave=");
+    DEBUG_PRINTLN(config.powersave);
   }
 
   //powersave
-  debug_print(F("settings_load(): config.debug:"));
-  debug_print(config.debug);
+  DEBUG_FUNCTION_PRINT("config.debug=");
+  DEBUG_PRINTLN(config.debug);
 
   if((config.debug != 1) && (config.debug != 0)) {
-    debug_print(F("settings_load(): debug not found, setting default"));
+    DEBUG_FUNCTION_PRINTLN("debug not found, setting default");
     config.debug = DEBUG ? 1 : 0;
     save_config = 1;
 
-    debug_print(F("settings_load(): set config.debug:"));
-    debug_print(config.debug);
+    DEBUG_FUNCTION_PRINT("set config.debug=");
+    DEBUG_PRINTLN(config.debug);
   }
 
 #if GSM_USE_QUECLOCATOR_TIMEOUT > 0
   //queclocator
-  debug_print(F("settings_load(): config.queclocator:"));
-  debug_print(config.queclocator);
+  DEBUG_FUNCTION_PRINT("config.queclocator=");
+  DEBUG_PRINTLN(config.queclocator);
 
   if((config.queclocator != 1) && (config.queclocator != 0)) {
-    debug_print(F("settings_load(): queclocator not found, setting default"));
+    DEBUG_FUNCTION_PRINTLN("queclocator not found, setting default");
     config.queclocator = QUECLOCATOR;
     save_config = 1;
 
-    debug_print(F("settings_load(): set config.queclocator:"));
-    debug_print(config.queclocator);
+    DEBUG_FUNCTION_PRINT("set config.queclocator=");
+    DEBUG_PRINTLN(config.queclocator);
   }
 #endif
 
   tmp = config.key[0];
   if(tmp == 255) { //this check is not sufficient
-    debug_print(F("settings_load(): key not found, setting default"));
+    DEBUG_FUNCTION_PRINTLN("key not found, setting default");
     strlcpy(config.key, KEY, sizeof(config.key));
     save_config = 1;
   }
 
   tmp = config.sms_key[0];
   if(tmp == 255) { //this check is not sufficient
-    debug_print("settings_load(): SMS key not found, setting default");
+    DEBUG_FUNCTION_PRINTLN("SMS key not found, setting default");
     strlcpy(config.sms_key, SMS_KEY, sizeof(config.sms_key));
     save_config = 1;
   }
 
   tmp = config.sim_pin[0];
   if(tmp == 255) { //this check is not sufficient
-    debug_print("settings_load(): SIM pin not found, setting default");
+    DEBUG_FUNCTION_PRINTLN("SIM pin not found, setting default");
     strlcpy(config.sim_pin, SIM_PIN, sizeof(config.sim_pin));
     save_config = 1;
   }
 
   tmp = config.apn[0];
   if(tmp == 255) {
-    debug_print("settings_load(): APN not set, setting default");
+    DEBUG_FUNCTION_PRINTLN("APN not set, setting default");
     strlcpy(config.apn, DEFAULT_APN, sizeof(config.apn));
     save_config = 1;
   }
 
   tmp = config.user[0];
   if(tmp == 255) {
-    debug_print("settings_load(): APN user not set, setting default");
+    DEBUG_FUNCTION_PRINTLN("APN user not set, setting default");
     strlcpy(config.user, DEFAULT_USER, sizeof(config.user));
     save_config = 1;
   }
 
   tmp = config.pwd[0];
   if(tmp == 255) {
-    debug_print("settings_load(): APN password not set, setting default");
+    DEBUG_FUNCTION_PRINTLN("APN password not set, setting default");
     strlcpy(config.pwd, DEFAULT_PASS, sizeof(config.pwd));
     save_config = 1;
   }
 
   tmp = config.alarm_phone[0];
   if(tmp == 255) {
-    debug_print("settings_load(): Alarm SMS number not set, setting default");
+    DEBUG_FUNCTION_PRINTLN("Alarm SMS number not set, setting default");
     strlcpy(config.alarm_phone, DEFAULT_ALARM_SMS, sizeof(config.alarm_phone));
     save_config = 1;
   }
@@ -159,19 +159,15 @@ void settings_load() {
 
   if (save_config == 1)
     settings_save();
-
-  debug_print(F("settings_load() finished"));
 }
 
 void settings_save() {
-  debug_print(F("settings_save() started"));
+  DEBUG_FUNCTION_CALL();
 
   //save all settings to flash
   dueFlashStorage.write(STORAGE_CONFIG_MAIN, (byte*)&config, sizeof(settings));
 
   addon_event(ON_SETTINGS_SAVE);
-  
-  debug_print(F("settings_save() finished"));
 }
 
 int settings_compare(size_t offset, size_t len) {

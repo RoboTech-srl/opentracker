@@ -1,6 +1,6 @@
 
 void reboot() {
-  debug_print(F("reboot() started"));
+  DEBUG_FUNCTION_CALL();
 
   //reset GPS
   gps_off();
@@ -111,7 +111,7 @@ void cpu_full_speed() {
 }
 
 void enter_low_power() {
-  debug_print(F("enter_low_power() started"));
+  DEBUG_FUNCTION_CALL();
 
   addon_event(ON_DEVICE_STANDBY);
 
@@ -124,12 +124,10 @@ void enter_low_power() {
   gsm_close();
 
   cpu_slow_down();
-  
-  debug_print(F("enter_low_power() completed"));
 }
 
 void exit_low_power() {
-  debug_print(F("exit_low_power() started"));
+  DEBUG_FUNCTION_CALL();
 
   cpu_full_speed();
   
@@ -141,12 +139,10 @@ void exit_low_power() {
   gps_wakeup();
 
   addon_event(ON_DEVICE_WAKEUP);
-
-  debug_print(F("exit_low_power() completed"));
 }
 
 void kill_power() {
-  debug_print(F("kill_power() called"));
+  DEBUG_FUNCTION_PRINT("called");
   addon_event(ON_DEVICE_KILL);
   // save as much power as possible
   gps_off();
