@@ -85,12 +85,8 @@ void setup() {
   //common hardware initialization
   device_init();
 
-  debug_port.begin(115200);
-  delay(2000);
-
-  //initialize GSM and GPS hardware
-  gsm_init();
-  gps_init();
+  // read-only settings check
+  settings_load(1);
 
   //initialize addon board hardware
   addon_init();
@@ -98,10 +94,15 @@ void setup() {
   //setting debug serial port
   DEBUG_FUNCTION_CALL();
 
+  //initialize GSM and GPS hardware
+  gsm_init();
+  gps_init();
+
   //blink software start
   blink_start();
 
-  settings_load();
+  // read/modify settings
+  int first_boot = settings_load();
 
   //get current log index
 #if STORAGE
@@ -111,10 +112,6 @@ void setup() {
   //GPS setup
   gps_setup();
 
-#if DEBUG == 20
-  debug_gps_terminal();
-#endif
-
   //GSM setup
   gsm_setup();
 
@@ -122,27 +119,71 @@ void setup() {
   debug_gsm_terminal();
 #endif
 
+#if DEBUG == 20
+  debug_gps_terminal();
+#endif
+
   // reply to Alarm SMS command
   if (config.alarm_on) {
     sms_send_msg("Alarm Activated", config.alarm_phone);
   }
-
+  
   // make sure we start with empty data
   data_reset();
 
-  //set GSM APN
-  gsm_set_apn();
-
-#ifdef KNOWN_APN_LIST
-  // only with a new SIM
+  // with a new SIM delete APN config and require a new one
   if (settings_compare(offsetof(settings, iccid), strlen(config.iccid))) {
-    // auto scanning of apn details configuration
+    DEBUG_PRINTLN(F("New SIM detected!"));
+#ifdef KNOWN_APN_LIST
+    // try with current APN first
+    gsm_set_apn();
+    // auto scanning of APN configuration
     int ap = gsm_scan_known_apn();
     if (ap) {
       settings_save(); // found good APN, save it as default
     }
-  }
+#if APN_RESET_WITH_NEW_SIM
+    else {
+      DEBUG_PRINTLN(F("Reset APN!"));
+      config.apn[0] = 0;
+      settings_save();
+    }
 #endif
+#else // no auto-APN scan
+#if APN_RESET_WITH_NEW_SIM
+    if (!first_boot) { // use configured APN at first boot (in tracker.h)
+      DEBUG_PRINTLN(F("Reset APN!"));
+      config.apn[0] = 0;
+      settings_save();
+    }
+#endif
+#endif
+  }
+
+  // do not proceed until APN configured
+  while (config.apn[0] == 0)
+  {
+    // ensure SMS command check at power on or reset
+    sms_check();
+
+    if (save_config == 1) {
+      //config should be saved
+      settings_save();
+      save_config = 0;
+    }
+
+    // allow debug terminal commands
+    debug_check_input();
+
+    // keep updating analog sensors and battery
+    addon_delay(1000);
+
+    if (power_cutoff) // apply cut-off
+      kill_power();
+  }
+
+  //set GSM APN
+  gsm_set_apn();
 
 #ifdef GSM_USE_NTP_SERVER
   // attempt clock update (over data connection)
