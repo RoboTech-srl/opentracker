@@ -192,12 +192,20 @@ void gsm_setup() {
   gsm_on();
 
 #if MODEM_BG96
-  pinMode(PD0, OUTPUT);
-  digitalWrite(PD0, HIGH);
-  gsm_port.print("AT+QGPSCFG=\"outport\",\"uartnmea\"\r");
+  gsm_port.print("AT+QCFG=\"nwscanseq\",01,1\r");
   gsm_wait_for_reply(1,0);
+  gsm_port.print("AT+QCFG=\"nwscanmode\",1,1\r");
+  gsm_wait_for_reply(1,0);
+    
+  pinMode(PIN_C_ANTON, OUTPUT);
+  digitalWrite(PIN_C_ANTON, HIGH);
+  delay(10);
   gsm_port.print("AT+QGPS=1\r");
   gsm_wait_for_reply(1,0);
+  gsm_port.print("AT+QGPSCFG=\"outport\",\"uartnmea\"\r");
+  gsm_wait_for_reply(1,0);
+
+  gps_setup();
 #endif
 
   //configure
@@ -316,7 +324,8 @@ void gsm_check_time_sync() {
   gsm_port.print("AT+QLTS\r");
   gsm_wait_for_reply(1,1);
 
-  if (strstr(modem_reply, "+QLTS:") != NULL)
+  // check reply is ok and exclude empty strings
+  if (strstr(modem_reply, "OK\r") != NULL && strstr(modem_reply, "+QLTS:") != NULL && strstr(modem_reply, "\"\"") == NULL)
     gsm_clock_was_set = true;
 
   gsm_get_time();
@@ -372,9 +381,21 @@ void gsm_set_pin() {
 
 void gsm_get_time() {
   DEBUG_FUNCTION_CALL();
+  //copy data to main time var only if valid
+  if (gsm_clock_was_set)
+    gsm_get_time(time_char);
+
+  if (memcmp(time_char, "19", 2) < 0) {
+    time_char[0] = 0;
+    gsm_clock_was_set = false;
+    DEBUG_FUNCTION_PRINTLN("clock has invalid year!");
+  }
+}
+
+void gsm_get_time(char buf[20]) {
+  DEBUG_FUNCTION_CALL();
 
   //clean any serial data
-
   gsm_get_reply(0);
 
   //get time from modem
@@ -386,12 +407,10 @@ void gsm_get_time() {
   if (tmp)
     tmp = strtok(tmp + 7, "\"\r");
   if (tmp) {
-    //copy data to main time var
-    if (gsm_clock_was_set)
-      strlcpy(time_char, tmp, sizeof(time_char));
+    strlcpy(buf, tmp, 20);
 
     DEBUG_FUNCTION_PRINT("result=");
-    DEBUG_PRINTLN(time_char);
+    DEBUG_PRINTLN(buf);
   }
 }
 
@@ -455,7 +474,8 @@ void gsm_get_imei() {
 
 void gsm_get_iccid() {
   DEBUG_FUNCTION_CALL();
-
+  config.iccid[0] = 0;
+  
   //get modem's imei
   gsm_port.print("AT+CCID\r");
 
