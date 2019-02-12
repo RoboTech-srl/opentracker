@@ -1,8 +1,8 @@
 
-void settings_load() {
+int settings_load(int readonly) {
   //load all settings from EEPROM
   byte tmp;
-  int defaults = 0;
+  static int defaults = 0;
 
   DEBUG_FUNCTION_CALL();
 
@@ -157,8 +157,16 @@ void settings_load() {
   else
     addon_event(ON_SETTINGS_LOAD);
 
+  if (readonly)
+    save_config = 0;
+    
   if (save_config == 1)
     settings_save();
+  return defaults;
+}
+
+int settings_load() {
+  return settings_load(0);
 }
 
 void settings_save() {
@@ -173,5 +181,5 @@ void settings_save() {
 int settings_compare(size_t offset, size_t len) {
   // compare part of the stored settings with the same part in volatile memory
   byte* b = dueFlashStorage.readAddress(STORAGE_CONFIG_MAIN);
-  return memcmp((byte*)&config + offset, b + offset, len);
+  return len > 0 ? memcmp((byte*)&config + offset, b + offset, len) : -2;
 }
