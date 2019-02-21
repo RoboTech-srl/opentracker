@@ -8,9 +8,7 @@ void gps_init() {
 #endif
 
   pinMode(PIN_RESET_GPS, OUTPUT);
-  digitalWrite(PIN_RESET_GPS, LOW);
-
-  gps_open();
+  digitalWrite(PIN_RESET_GPS, HIGH);
 }
 
 void gps_open() {
@@ -23,11 +21,23 @@ void gps_open() {
 
 void gps_close() {
   gps_port.end();
+
+#if (OPENTRACKER_HW_REV >= 0x0300)
+  // float serial interface pins (prevent reset issues)
+  class HWS : public HardwareSerial {
+    public: serial_t* getSerial() { return &_serial; }
+  };
+  serial_t* ser = static_cast<HWS*>(&gps_port)->getSerial();
+  
+  pinMode(pinNametoDigitalPin(ser->pin_rx), INPUT);
+  pinMode(pinNametoDigitalPin(ser->pin_tx), INPUT);
+#endif
 }
 
 void gps_setup() {
   DEBUG_FUNCTION_CALL();
 
+  gps_off();
   gps_on();
   gps_wakeup();
   
@@ -51,12 +61,16 @@ void gps_on() {
 
   delay(100);
   digitalWrite(PIN_RESET_GPS, LOW);
+  delay(500);
+
+  gps_open();
 }
 
 void gps_off() {
   //turn off GPS
   DEBUG_FUNCTION_CALL();
 
+  gps_close();
   digitalWrite(PIN_RESET_GPS, HIGH);
   delay(100);
 }
