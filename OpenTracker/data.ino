@@ -1,3 +1,5 @@
+#include <time.h>
+
 //collect and send GPS data for sending
 #define MAX_DATA_INDEX (int)(sizeof(data_current) - 2)
 
@@ -102,15 +104,16 @@ void collect_all_data(int ignitionState) {
   //convert to UTC (strip time zone info)
   time_char[17] = 0;
 
-#ifndef HTTP_USE_JSON
-  //attach time to data packet
-  data_append_string(time_char);
-#endif
-  //collect all data
 #ifdef HTTP_USE_JSON
   //indicate start of JSON
   data_append_char('{');
+#ifdef HTTP_USE_JSON_TIMESTAMP
+  data_append_string("\"values\":{");
+#endif
 #else
+  //attach time to data packet
+  data_append_string(time_char);
+  
   //indicate start of GPS data packet
   data_append_char('[');
 #endif
@@ -175,6 +178,25 @@ void collect_all_data(int ignitionState) {
   addon_collect_data();
 
 #ifdef HTTP_USE_JSON
+#ifdef HTTP_USE_JSON_TIMESTAMP
+  struct tm tm;
+  time_t epoch;
+  if ( sscanf(time_char, "%02d/%02d/%02d,%02d:%02d:%02d",
+      &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
+      &tm.tm_hour, &tm.tm_min, &tm.tm_sec) == 6 ) {
+    tm.tm_year += 2000 - 1900; // offset since 1900
+    tm.tm_mon -= 1; // zero based
+    tm.tm_yday = 0;
+    tm.tm_wday = 0;
+    tm.tm_isdst = 0;
+    epoch = mktime(&tm); // seconds
+    char tmp[20];
+    ltoa(epoch, tmp, 10);
+    data_append_string("},\"ts\":");
+    data_append_string(tmp);
+    data_append_string("000"); // convert to milliseconds
+  }
+#endif
   // end of JSON
   data_append_char('}');
 #else

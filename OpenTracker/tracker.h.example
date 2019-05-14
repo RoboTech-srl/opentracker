@@ -58,6 +58,8 @@
 
 #define HTTP_USER_AGENT "OpenTracker 3.2"
 //#define HTTP_USE_GET                      // leave commented for POST, uncomment for GET request
+//#define HTTP_USE_JSON                       // use JSON format, only valid with POST request (Thingsboard format)
+//#define HTTP_USE_JSON_TIMESTAMP             // encapsulate JSON values and add local timestamp (Thingsboard format)
 
 #define HTTP_PARAM_IMEI "imei"
 #define HTTP_PARAM_KEY  "key"
