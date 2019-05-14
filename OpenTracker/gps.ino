@@ -278,7 +278,11 @@ void collect_gps_data(bool useJSON) {
         if(DATA_INCLUDE_HDOP) {
           data_field_separator(',');
           if (useJSON) data_append_string("\"HDOP\":");
-          ltoa(hdop, tmp, 10);
+          #if DATA_USE_HDOP_FLOAT
+            dtostrf(hdop/100.0f,1,2,tmp);
+          #else          
+            ltoa(hdop, tmp, 10);
+          #endif
           data_append_string(tmp);
         }
 

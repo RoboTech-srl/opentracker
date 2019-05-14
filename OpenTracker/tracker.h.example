@@ -46,6 +46,7 @@
 #define DATA_INCLUDE_ALTITUDE 1             // enable to include altitude
 #define DATA_INCLUDE_HEADING 1              // enable to include heading
 #define DATA_INCLUDE_HDOP 1                 // enable to include hdop
+#define DATA_USE_HDOP_FLOAT 1               // use decimal format for HDOP
 #define DATA_INCLUDE_SATELLITES 1           // enable to include satellites
 #define DATA_INCLUDE_BATTERY_LEVEL 0        // enable to include the battery level in the POST string
 #define DATA_INCLUDE_IGNITION_STATE 0       // enable to include the ignition state in the POST string
