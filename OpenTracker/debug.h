@@ -16,7 +16,7 @@
 
 #else
 
-#define DEBUG_FUNCTION_CALL() DebugFunction(__FUNCTION__)
+#define DEBUG_FUNCTION_CALL() DebugFunction _dbfc(__FUNCTION__)
 #define DEBUG_FUNCTION_PRINT(...) do { DebugFunction::Print(__FUNCTION__); debug_port.print(__VA_ARGS__); } while(0)
 #define DEBUG_FUNCTION_PRINTLN(...) do { DebugFunction::Print(__FUNCTION__); debug_port.println(__VA_ARGS__); } while(0)
 
