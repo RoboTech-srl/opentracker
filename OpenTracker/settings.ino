@@ -19,7 +19,6 @@ int settings_load(int readonly) {
     config.interval_send = INTERVAL_SEND;
     config.powersave = POWERSAVE;
     config.alarm_on =  DEFAULT_ALARM_ON;
-    config.queclocator = QUECLOCATOR;
     config.debug = DEBUG ? 1 : 0;
 
     strlcpy(config.key, KEY, sizeof(config.key));
@@ -86,21 +85,6 @@ int settings_load(int readonly) {
     DEBUG_FUNCTION_PRINT("set config.debug=");
     DEBUG_PRINTLN(config.debug);
   }
-
-#if GSM_USE_QUECLOCATOR_TIMEOUT > 0
-  //queclocator
-  DEBUG_FUNCTION_PRINT("config.queclocator=");
-  DEBUG_PRINTLN(config.queclocator);
-
-  if((config.queclocator != 1) && (config.queclocator != 0)) {
-    DEBUG_FUNCTION_PRINTLN("queclocator not found, setting default");
-    config.queclocator = QUECLOCATOR;
-    save_config = 1;
-
-    DEBUG_FUNCTION_PRINT("set config.queclocator=");
-    DEBUG_PRINTLN(config.queclocator);
-  }
-#endif
 
   tmp = config.key[0];
   if(tmp == 255) { //this check is not sufficient

@@ -70,7 +70,6 @@ struct settings {
   char iccid[25];         //ICCID number
   byte alarm_on;
   char alarm_phone[20];   //alarm phone number
-  byte queclocator;       //flag to use QuecLocator fallback when GPS not available
   byte debug;             //flag to enable/disable debug console (USB)
   byte powersave;         //flag to enable/disable low power mode (with engine off)
 };

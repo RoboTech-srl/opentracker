@@ -111,79 +111,8 @@ void collect_all_data(int ignitionState) {
 
   data_field_restart();
 
-#if GSM_USE_QUECLOCATOR_TIMEOUT > 0
-  int idx = data_index;
-#endif
-
   collect_gps_data();
   
-#if GSM_USE_QUECLOCATOR_TIMEOUT > 0
-  if (config.queclocator == 1 && idx == data_index) // no GPS fix available, use QuecLocator if enabled
-  {
-    if (gsm_get_queclocator())
-    {
-      DEBUG_PRINTLN("override missing GPS data with QuecLocator");
-
-      // construct GPS data packet
-
-      if(DATA_INCLUDE_GPS_DATE) {
-        data_field_separator(',');
-        //converting modem date to GPS format
-        data_append_char(time_char[6]);
-        data_append_char(time_char[7]);
-        data_append_char(time_char[3]);
-        data_append_char(time_char[4]);
-        data_append_char(time_char[0]);
-        data_append_char(time_char[1]);
-      }
-
-      if(DATA_INCLUDE_GPS_TIME) {
-        data_field_separator(',');
-        //converting modem time to GPS format
-        data_append_char(time_char[9]);
-        data_append_char(time_char[10]);
-        data_append_char(time_char[12]);
-        data_append_char(time_char[13]);
-        data_append_char(time_char[15]);
-        data_append_char(time_char[16]);
-        data_append_char(time_char[18]);
-        data_append_char(time_char[19]);
-      }
-
-      if(DATA_INCLUDE_LATITUDE) {
-        data_field_separator(',');
-        data_append_string(lat_current);
-      }
-
-      if(DATA_INCLUDE_LONGITUDE) {
-        data_field_separator(',');
-        data_append_string(lon_current);
-      }
-
-      if(DATA_INCLUDE_SPEED) {
-        data_field_separator(',');
-      }
-
-      if(DATA_INCLUDE_ALTITUDE) {
-        data_field_separator(',');
-      }
-
-      if(DATA_INCLUDE_HEADING) {
-        data_field_separator(',');
-      }
-
-      if(DATA_INCLUDE_HDOP) {
-        data_field_separator(',');
-      }
-
-      if(DATA_INCLUDE_SATELLITES) {
-        data_field_separator(',');
-        data_append_string("-1"); //-1 means QuecLocator
-      }
-    }
-  }
-#endif
-
   //indicate stop of GPS data packet
   data_append_char(']');
 

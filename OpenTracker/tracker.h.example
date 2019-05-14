@@ -13,7 +13,6 @@
 #define DATA_LIMIT 2500       //current data limit, data collected before sending to remote server can not exceed this
 #define SMS_KEY "pass"        //default password for SMS auth
 #define SIM_PIN ""            //default SIM PIN (none)
-#define QUECLOCATOR 0         //default setting for QuecLocator fallback location provider
 
 #define SMS_CHECK_INCLUDE_IMEI  0           // 0=check only password, 1=also check IMEI (format: #pass@imei,command=value)
 #define SMS_CHECK_INTERVAL_COUNT          6 // 0=disable SMS check with engine off, 1-N=check every N cycles of interval time
