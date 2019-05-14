@@ -102,25 +102,37 @@ void collect_all_data(int ignitionState) {
   //convert to UTC (strip time zone info)
   time_char[17] = 0;
 
+#ifndef HTTP_USE_JSON
   //attach time to data packet
   data_append_string(time_char);
-
+#endif
   //collect all data
+#ifdef HTTP_USE_JSON
+  //indicate start of JSON
+  data_append_char('{');
+#else
   //indicate start of GPS data packet
   data_append_char('[');
-
+#endif
   data_field_restart();
 
-  collect_gps_data();
+#ifdef HTTP_USE_JSON
+  collect_gps_data(true);
+#else
+  collect_gps_data(false);
   
   //indicate stop of GPS data packet
   data_append_char(']');
 
   data_field_restart();
+#endif
 
   // append battery level to data packet
   if(DATA_INCLUDE_BATTERY_LEVEL) {
     data_field_separator(',');
+#ifdef HTTP_USE_JSON
+    data_append_string("\"battery\":");
+#endif
     float sensorValue = analog_input_voltage(AIN_S_INLEVEL, HIGH);
     char batteryLevel[10];
     dtostrf(sensorValue,2,2,batteryLevel);
@@ -130,6 +142,9 @@ void collect_all_data(int ignitionState) {
   // ignition state
   if(DATA_INCLUDE_IGNITION_STATE) {
     data_field_separator(',');
+#ifdef HTTP_USE_JSON
+    data_append_string("\"ignition\":");
+#endif
     if(ignitionState == -1) {
       data_append_char('2'); // backup source
     } else if(ignitionState == 0) {
@@ -151,13 +166,21 @@ void collect_all_data(int ignitionState) {
     snprintf(runningTimeString,32,"%ld",(unsigned long) currentRunningTime / 1000);
 
     data_field_separator(',');
+#ifdef HTTP_USE_JSON
+    data_append_string("\"running\":");
+#endif
     data_append_string(runningTimeString);
   }
 
   addon_collect_data();
 
+#ifdef HTTP_USE_JSON
+  // end of JSON
+  data_append_char('}');
+#else
   //end of data packet
   data_append_char('\n');
+#endif
 }
 
 /**

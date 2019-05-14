@@ -85,8 +85,12 @@ void gps_wakeup() {
   gps_port.print("\r\n");
 }
 
-//collect GPS data from serial port
 void collect_gps_data() {
+  collect_gps_data(false);
+}
+
+//collect GPS data from serial port
+void collect_gps_data(bool useJSON) {
   int fix = 0;
 
   char tmp[15];
@@ -222,6 +226,7 @@ void collect_gps_data() {
 
         if(DATA_INCLUDE_GPS_DATE) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"date\":");
           //converting date to data packet
           ltoa(date_gps + 1000000, tmp, 10);
           data_append_string(tmp + 1);
@@ -229,6 +234,7 @@ void collect_gps_data() {
 
         if(DATA_INCLUDE_GPS_TIME) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"time\":");
           //time
           ltoa(time_gps + 100000000, tmp, 10);
           data_append_string(tmp + 1);
@@ -236,42 +242,49 @@ void collect_gps_data() {
 
         if(DATA_INCLUDE_LATITUDE) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"latitude\":");
           dtostrf(flat,1,6,tmp);
           data_append_string(tmp);
         }
 
         if(DATA_INCLUDE_LONGITUDE) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"longitude\":");
           dtostrf(flon,1,6,tmp);
           data_append_string(tmp);
         }
         
         if(DATA_INCLUDE_SPEED) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"speed\":");
           dtostrf(fkmph,1,2,tmp);
           data_append_string(tmp);
         }
 
         if(DATA_INCLUDE_ALTITUDE) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"altitude\":");
           dtostrf(falt,1,2,tmp);
           data_append_string(tmp);
         }
 
         if(DATA_INCLUDE_HEADING) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"COG\":");
           dtostrf(fc,1,2,tmp);
           data_append_string(tmp);
         }
 
         if(DATA_INCLUDE_HDOP) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"HDOP\":");
           ltoa(hdop, tmp, 10);
           data_append_string(tmp);
         }
 
         if(DATA_INCLUDE_SATELLITES) {
           data_field_separator(',');
+          if (useJSON) data_append_string("\"nsat\":");
           ltoa(sats, tmp, 10);
           data_append_string(tmp);
         }

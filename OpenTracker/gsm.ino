@@ -905,17 +905,24 @@ int gsm_send_done() {
 }
 
 #ifdef HTTP_USE_GET
+#ifdef HTTP_USE_JSON
+#error "Cannot use JSON format with HTTP GET request!"
+#endif
 const char HTTP_HEADER0[ ] =        //HTTP header line before GET params
   "GET " URL "?";
 const char HTTP_HEADER1[ ] =        //HTTP header line before length
-  " HTTP/1.0\r\n"
+  " HTTP/1.1\r\n"
   "Host: " HOSTNAME "\r\n"
   "Content-length: 0";
 #else
 const char HTTP_HEADER1[ ] =        //HTTP header line before length
-  "POST " URL " HTTP/1.0\r\n"
+  "POST " URL " HTTP/1.1\r\n"
   "Host: " HOSTNAME "\r\n"
+#ifdef HTTP_USE_JSON
+  "Content-Type:application/json\r\n"
+#else
   "Content-type: application/x-www-form-urlencoded\r\n"
+#endif
   "Content-length: ";
 #endif
 const char HTTP_HEADER2[ ] =          //HTTP header line after length
@@ -932,12 +939,17 @@ int gsm_send_http_current() {
   DEBUG_PRINTLN(data_current);
 
   //getting length of data full package
+  int http_len = strlen(HTTP_PARAM_IMEI) + strlen(HTTP_PARAM_KEY) + strlen(HTTP_PARAM_DATA) + 5;    //imei= &key= &d=
 #ifdef HTTP_USE_GET
-  int http_len = strlen(config.imei)+strlen(config.key);
+  http_len += strlen(config.imei)+strlen(config.key);
 #else
-  int http_len = strlen(config.imei)+strlen(config.key)+url_encoded_strlen(data_current);
+#ifdef HTTP_USE_JSON
+  // override length for JSON format
+  http_len = strlen(data_current);
+#else
+  http_len += strlen(config.imei)+strlen(config.key)+url_encoded_strlen(data_current);
 #endif
-  http_len += strlen(HTTP_PARAM_IMEI) + strlen(HTTP_PARAM_KEY) + strlen(HTTP_PARAM_DATA) + 5;    //imei= &key= &d=
+#endif
 
   DEBUG_FUNCTION_PRINT("Length of data packet=");
   DEBUG_PRINTLN(http_len);
@@ -995,17 +1007,19 @@ int gsm_send_http_current() {
     return 0; // abort
   }
 
+#ifndef HTTP_USE_JSON
   DEBUG_FUNCTION_PRINT("Sending IMEI and Key=");
   DEBUG_PRINTLN(config.imei);
   // don't disclose the key
-
   //sending imei and key first
   if (!gsm_send_begin(13+strlen(config.imei)+strlen(config.key))) {
     DEBUG_FUNCTION_PRINT("send refused");
     return 0; // abort
   }
 #endif
+#endif
 
+#ifndef HTTP_USE_JSON
   gsm_port.print(HTTP_PARAM_IMEI "=");
   gsm_port.print(config.imei);
   gsm_port.print("&" HTTP_PARAM_KEY "=");
@@ -1019,6 +1033,7 @@ int gsm_send_http_current() {
 
   //validate header delivery
   gsm_validate_tcp();
+#endif
 
   DEBUG_FUNCTION_PRINTLN("Sending body");
   int tmp_ret = gsm_send_data_current();
@@ -1074,7 +1089,11 @@ int gsm_send_data_current() {
   DEBUG_PRINTLN(data_len);
 
   for(int i=0; i<data_len; ) {
+#ifdef HTTP_USE_JSON
+    int done = strlcpy(buf, &data_current[i], sizeof(buf));
+#else
     int done = url_encoded_strlcpy(buf, sizeof(buf), &data_current[i]);
+#endif
     i += done;
     chunk_len = strlen(buf);
     
