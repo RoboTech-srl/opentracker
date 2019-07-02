@@ -191,10 +191,31 @@ void gsm_setup() {
   //turn on modem
   gsm_on();
 
+  gsm_port.print("AT+CREG=2\r");
+  gsm_wait_for_reply(1,0);
+  gsm_port.print("AT+COPS=3,2\r");
+  gsm_wait_for_reply(1,0);
+
 #if MODEM_BG96
+#if GSM_USE_NBIOT
+  gsm_port.print("AT+QCFG=\"iotopmode\",1,1\r");
+  gsm_wait_for_reply(1,0);
+  //gsm_port.print("AT+QCFG=\"band\",F,80084,80084,1\r");
+  gsm_port.print("AT+QCFG=\"band\",F,80000,80000,1\r");
+  gsm_wait_for_reply(1,0);
+  gsm_port.print("AT+QCFG=\"nwscanseq\",020301,1\r");
+  gsm_wait_for_reply(1,0);
+  gsm_port.print("AT+QCFG=\"nwscanmode\",3,1\r");
+  gsm_wait_for_reply(1,0);
+#else
+  gsm_port.print("AT+QCFG=\"band\",F,400A0E189F,A0E189F,1\r");
+  gsm_wait_for_reply(1,0);
   gsm_port.print("AT+QCFG=\"nwscanseq\",01,1\r");
   gsm_wait_for_reply(1,0);
   gsm_port.print("AT+QCFG=\"nwscanmode\",1,1\r");
+  gsm_wait_for_reply(1,0);
+#endif
+  gsm_port.print("AT+CEREG=2\r");
   gsm_wait_for_reply(1,0);
     
   pinMode(PIN_C_ANTON, OUTPUT);
@@ -249,7 +270,11 @@ void gsm_config() {
   gsm_startup_cmd();
 
   // wait for network availability (max 60s)
+#if GSM_USE_NBIOT
+  gsm_wait_network_ready(900000);
+#else
   gsm_wait_network_ready(60000);
+#endif
 
   //synchronize modem clock
   gsm_check_time_sync();
@@ -299,7 +324,11 @@ void gsm_wait_network_ready(int timeout) {
   do {
     gsm_print_signal_info(1); // debug
 
-    int reg = gsm_get_network_status();
+#if MODEM_BG96 && GSM_USE_NBIOT
+    int reg = gsm_get_eps_status();
+#else
+    int reg = gsm_get_gprs_status();
+#endif
     if(reg==1 || reg==5 || reg==3) break;
     status_delay(3000);
   }
@@ -531,7 +560,7 @@ int gsm_get_modem_status() {
   return pas;
 }
 
-int gsm_get_network_status() {
+int gsm_get_gprs_status() {
   DEBUG_FUNCTION_CALL();
 
   gsm_port.print("AT+CGREG?\r");
@@ -542,6 +571,31 @@ int gsm_get_network_status() {
     gsm_get_reply(0);
   
     char *tmp = strstr(modem_reply, "+CGREG:");
+    if(tmp!=NULL)
+      tmp = strchr(tmp+7,',');
+    if(tmp!=NULL) {
+      reg = atoi(tmp+1);
+      break;
+    }
+  }
+  gsm_wait_for_reply(1,0);
+  
+  DEBUG_FUNCTION_PRINT("returned=");
+  DEBUG_PRINTLN(reg);
+  return reg;
+}
+
+int gsm_get_eps_status() {
+  DEBUG_FUNCTION_CALL();
+
+  gsm_port.print("AT+CEREG?\r");
+
+  int reg = -1; // unexpected reply
+  for (int k=0; k<10; ++k) {
+    status_delay(50);
+    gsm_get_reply(0);
+  
+    char *tmp = strstr(modem_reply, "+CEREG:");
     if(tmp!=NULL)
       tmp = strchr(tmp+7,',');
     if(tmp!=NULL) {
