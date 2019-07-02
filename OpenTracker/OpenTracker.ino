@@ -382,6 +382,11 @@ void device_init() {
   digitalWrite(PIN_C_OUT_CS, HIGH);
   digitalWrite(PIN_C_ACC_CS, HIGH);
 #endif
+
+  battery_init();
+  delay(100);
+  if (battery_get_source() == 0)
+    battery_set_charger(true);
 }
 
 // when DEBUG is defined >= 2 then serial monitor accepts test commands
