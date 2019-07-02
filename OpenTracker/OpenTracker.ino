@@ -122,6 +122,14 @@ void setup() {
   debug_gps_terminal();
 #endif
 
+#if DEBUG == 30
+  DEBUG_PRINTLN("Test Mode Console");
+  for (;;) {
+    status_led();
+    debug_check_input();
+  }
+#endif
+
   // reply to Alarm SMS command
   if (config.alarm_on) {
     sms_send_msg("Alarm Activated", config.alarm_phone);
