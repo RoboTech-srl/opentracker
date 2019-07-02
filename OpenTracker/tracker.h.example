@@ -29,6 +29,8 @@
 #define GSM_REPLY_FAILURES_REBOOT 10        // 0=disabled, increase to set the number of GSM reply failures that will trigger a reboot of the opentracker device
 #define GSM_DISCONNECT_AFTER_SEND 0         // 0=keep modem data session active, only close TCP connection (default), 1=close data session after each send
 
+#define GSM_USE_CUSTOM_DNS "8.8.8.8"        // undefine to keep default DNS assigned by network
+
 #define GPS_COLLECT_TIMEOUT       4         // max time spent looking for a GPS fix (seconds)
 
 #define ENGINE_RUNNING_LOG_FAST_AS_POSSIBLE 0 // 1=when the engine is running send interval is ignored

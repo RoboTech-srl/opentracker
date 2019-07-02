@@ -702,9 +702,10 @@ int gsm_set_apn()  {
 #endif
   gsm_send_at();
 
-  // set google DNS (TODO: make optional)
-  gsm_port.print(AT_CONFIGDNS "\"8.8.8.8\"\r");
+#ifdef GSM_USE_CUSTOM_DNS
+  gsm_port.print(AT_CONFIGDNS "\"" GSM_USE_CUSTOM_DNS "\"\r");
   gsm_wait_for_reply(1,0);
+#endif
   if (strstr(modem_reply, "OK") == NULL)
     return 0;
 
@@ -822,9 +823,10 @@ int gsm_connect() {
 #if MODEM_CMDSET
         gsm_port.print(AT_ACTIVATE);
         gsm_wait_for_reply(1,0);
-        
-        gsm_port.print(AT_CONFIGDNS "\"8.8.8.8\"\r");
+#ifdef GSM_USE_CUSTOM_DNS
+        gsm_port.print(AT_CONFIGDNS "\"" GSM_USE_CUSTOM_DNS "\"\r");
         gsm_wait_for_reply(1,0);
+#endif
 #endif
       }
       if (ipstat == 0) {
