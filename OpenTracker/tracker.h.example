@@ -31,6 +31,18 @@
 
 #define GSM_USE_CUSTOM_DNS "8.8.8.8"        // undefine to keep default DNS assigned by network
 
+//#define GSM_USE_GSM_BAND ALL_GSM_BAND       // use only selected radio bands (combine GSM_BAND_ + 850,900,1800,1900)
+//#define GSM_USE_CATM1_BAND ALL_CATM1_BAND   // use only selected radio bands (combine LTE_BAND_ + B1,B2,B3,B4,B5,B8,B12,B13,B18,B19,B20,B26,B28,B39)
+//#define GSM_USE_CATNB1_BAND ALL_CATNB1_BAND // use only selected radio bands (combine LTE_BAND_ + B1,B2,B3,B4,B5,B8,B12,B13,B18,B19,B20,B26,B28)
+
+//Example for Cat-NB1 with Vodafone
+//#define GSM_USE_CATNB1_BAND LTE_BAND_B20
+//#define GSM_SCAN_MODE 3                     // undefined or 0=Auto, 1=GSM Only, 3=LTE Only
+//#define GSM_SCAN_SEQUENCE 030201            // octal format (01=GSM, 02=LTE Cat-M1, 03=LTE Cat-NB1)
+//#define GSM_SCAN_LTE_MODE 1                 // undefined or 2=Both, 0=Cat-M1, 2=Cat-NB1
+
+#define GSM_NETWORK_SEARCH_TIMEOUT 60000    // can be up to several minutes for first time NB-IoT
+
 #define GPS_COLLECT_TIMEOUT       4         // max time spent looking for a GPS fix (seconds)
 
 #define ENGINE_RUNNING_LOG_FAST_AS_POSSIBLE 0 // 1=when the engine is running send interval is ignored

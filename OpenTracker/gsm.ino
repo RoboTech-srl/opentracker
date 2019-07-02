@@ -32,6 +32,30 @@
 #define AT_NTP "AT+QNTP="
 #endif
 
+#define GSM_BAND_900  1
+#define GSM_BAND_1800 2
+#define GSM_BAND_850  4
+#define GSM_BAND_1900 8
+
+#define LTE_BAND_B1   0x1
+#define LTE_BAND_B2   0x2
+#define LTE_BAND_B3   0x4
+#define LTE_BAND_B4   0x8
+#define LTE_BAND_B5   0x10
+#define LTE_BAND_B8   0x80
+#define LTE_BAND_B12  0x800
+#define LTE_BAND_B13  0x1000
+#define LTE_BAND_B18  0x20000
+#define LTE_BAND_B19  0x40000
+#define LTE_BAND_B20  0x80000
+#define LTE_BAND_B26  0x2000000
+#define LTE_BAND_B28  0x8000000
+#define LTE_BAND_B39  0x4000000000ull
+
+#define ALL_GSM_BAND    0xF
+#define ALL_CATM1_BAND  0x400A0E189Full
+#define ALL_CATNB1_BAND 0xA0E189F
+
 void gsm_init() {
   //setup modem pins
   DEBUG_FUNCTION_CALL();
@@ -191,46 +215,119 @@ void gsm_setup() {
   //turn on modem
   gsm_on();
 
-  gsm_port.print("AT+CREG=2\r");
-  gsm_wait_for_reply(1,0);
   gsm_port.print("AT+COPS=3,2\r");
   gsm_wait_for_reply(1,0);
 
 #if MODEM_BG96
-#if GSM_USE_NBIOT
-  gsm_port.print("AT+QCFG=\"iotopmode\",1,1\r");
-  gsm_wait_for_reply(1,0);
-  //gsm_port.print("AT+QCFG=\"band\",F,80084,80084,1\r");
-  gsm_port.print("AT+QCFG=\"band\",F,80000,80000,1\r");
-  gsm_wait_for_reply(1,0);
-  gsm_port.print("AT+QCFG=\"nwscanseq\",020301,1\r");
-  gsm_wait_for_reply(1,0);
-  gsm_port.print("AT+QCFG=\"nwscanmode\",3,1\r");
-  gsm_wait_for_reply(1,0);
-#else
-  gsm_port.print("AT+QCFG=\"band\",F,400A0E189F,A0E189F,1\r");
-  gsm_wait_for_reply(1,0);
-  gsm_port.print("AT+QCFG=\"nwscanseq\",01,1\r");
-  gsm_wait_for_reply(1,0);
-  gsm_port.print("AT+QCFG=\"nwscanmode\",1,1\r");
-  gsm_wait_for_reply(1,0);
-#endif
-  gsm_port.print("AT+CEREG=2\r");
-  gsm_wait_for_reply(1,0);
-    
+  // configure GPS receiver inside BG96
   pinMode(PIN_C_ANTON, OUTPUT);
   digitalWrite(PIN_C_ANTON, HIGH);
   delay(10);
+  
   gsm_port.print("AT+QGPS=1\r");
   gsm_wait_for_reply(1,0);
   gsm_port.print("AT+QGPSCFG=\"outport\",\"uartnmea\"\r");
   gsm_wait_for_reply(1,0);
 
   gps_setup();
+
+#ifndef GSM_USE_GSM_BAND
+#define GSM_USE_GSM_BAND ALL_GSM_BAND
+#endif
+#ifndef GSM_USE_CATM1_BAND
+#define GSM_USE_CATM1_BAND ALL_CATM1_BAND
+#endif
+#ifndef GSM_USE_CATNB1_BAND
+#define GSM_USE_CATNB1_BAND ALL_CATNB1_BAND
+#endif
+  gsm_port.print("AT+QCFG=\"band\",");
+  gsm_port.print(GSM_USE_GSM_BAND, HEX);
+  gsm_port.print(",");
+  char tmp[32] = {0};
+  snprintf(tmp, sizeof(tmp), "%X%08X", (uint32_t)(GSM_USE_CATM1_BAND>>32), (uint32_t)GSM_USE_CATM1_BAND);
+  gsm_port.print(tmp);
+  gsm_port.print(",");
+  gsm_port.print(GSM_USE_CATNB1_BAND, HEX);
+  gsm_port.print(",1\r");
+  gsm_wait_for_reply(1,0);
+
+#ifndef GSM_SCAN_LTE_MODE
+#define GSM_SCAN_LTE_MODE 2
+#endif
+  gsm_port.print("AT+QCFG=\"iotopmode\",");
+  gsm_port.print(GSM_SCAN_LTE_MODE);
+  gsm_port.print(",1\r");
+  gsm_wait_for_reply(1,0);
+
+  gsm_set_scanseq();
+  
+  gsm_set_scanmode();
 #endif
 
   //configure
   gsm_config();
+}
+
+void gsm_set_scanmode() {
+  DEBUG_FUNCTION_CALL();
+
+  // read scan mode and update if necessary
+  gsm_port.print("AT+QCFG=\"nwscanmode\"\r");
+  gsm_wait_for_reply(1,1);
+
+  if (strstr(modem_reply, "OK\r") == NULL)
+    return; // not supported
+    
+  char* tmp = strstr(modem_reply, "+QCFG:");
+  int scanmode = -1;
+  if (tmp != NULL) {
+    tmp = strchr(tmp, ',');
+    if (tmp != NULL)
+      scanmode = atoi(tmp+1);
+  }
+#if !defined(GSM_SCAN_MODE) || (GSM_SCAN_MODE != 1 && GSM_SCAN_MODE != 3)
+#undef GSM_SCAN_MODE
+#define GSM_SCAN_MODE 0
+#endif
+  if (scanmode != GSM_SCAN_MODE) {
+    gsm_port.print("AT+QCFG=\"nwscanmode\",");
+    gsm_port.print(GSM_SCAN_MODE);
+    gsm_port.print(",1\r");
+    gsm_wait_for_reply(1,0);
+  }
+}
+
+void gsm_set_scanseq() {
+  DEBUG_FUNCTION_CALL();
+
+  // read scan mode and update if necessary
+  gsm_port.print("AT+QCFG=\"nwscanseq\"\r");
+  gsm_wait_for_reply(1,1);
+
+  if (strstr(modem_reply, "OK\r") == NULL)
+    return; // not supported
+    
+  char* tmp = strstr(modem_reply, "+QCFG:");
+  int scanseq = -1;
+  if (tmp != NULL) {
+    tmp = strchr(tmp, ',');
+    if (tmp != NULL)
+      scanseq = strtol(tmp+1, NULL, 8);
+  }
+#if !defined(GSM_SCAN_SEQUENCE)
+#define GSM_SCAN_SEQUENCE 020301
+#endif
+  if (scanseq != GSM_SCAN_SEQUENCE) {
+    gsm_port.print("AT+QCFG=\"nwscanseq\",");
+    gsm_port.write('0');
+    gsm_port.print((GSM_SCAN_SEQUENCE>>12) & 3);
+    gsm_port.write('0');
+    gsm_port.print((GSM_SCAN_SEQUENCE>>6) & 3);
+    gsm_port.write('0');
+    gsm_port.print(GSM_SCAN_SEQUENCE & 3);
+    gsm_port.print(",1\r");
+    gsm_wait_for_reply(1,0);
+  }
 }
 
 void gsm_enable_time_sync() {
@@ -270,11 +367,7 @@ void gsm_config() {
   gsm_startup_cmd();
 
   // wait for network availability (max 60s)
-#if GSM_USE_NBIOT
-  gsm_wait_network_ready(900000);
-#else
-  gsm_wait_network_ready(60000);
-#endif
+  gsm_wait_network_ready(GSM_NETWORK_SEARCH_TIMEOUT);
 
   //synchronize modem clock
   gsm_check_time_sync();
@@ -306,6 +399,8 @@ void gsm_print_signal_info(int longer) {
 }
 
 void gsm_wait_modem_ready(int timeout) {
+  DEBUG_FUNCTION_CALL();
+  
   // wait for modem ready (attached to network)
   unsigned long t = millis();
   do {
@@ -318,21 +413,34 @@ void gsm_wait_modem_ready(int timeout) {
   while ((long)(millis() - t) < timeout);
 }
 
-void gsm_wait_network_ready(int timeout) {
+int gsm_wait_network_ready(int timeout) {
+  DEBUG_FUNCTION_CALL();
+  
+  int reg = -1, ret = 0;
   // wait for modem ready (attached to network)
   unsigned long t = millis();
   do {
     gsm_print_signal_info(1); // debug
 
-#if MODEM_BG96 && GSM_USE_NBIOT
-    int reg = gsm_get_eps_status();
-#else
-    int reg = gsm_get_gprs_status();
+#if MODEM_BG96
+    reg = gsm_get_eps_status();
+    if(reg==1 || reg==5 || reg==3) {
+      ret = 1;
+      break;
+    }
 #endif
-    if(reg==1 || reg==5 || reg==3) break;
+    reg = gsm_get_gprs_status();
+    if(reg==1 || reg==5 || reg==3) {
+      ret = 1;
+      break;
+    }
     status_delay(3000);
   }
   while ((long)(millis() - t) < timeout);
+  
+  DEBUG_FUNCTION_PRINT("result=");
+  DEBUG_PRINTLN(ret);
+  return ret;
 }
 
 bool gsm_clock_was_set = false;
