@@ -319,10 +319,14 @@ void gsm_set_scanseq() {
 #endif
   if (scanseq != GSM_SCAN_SEQUENCE) {
     gsm_port.print("AT+QCFG=\"nwscanseq\",");
-    gsm_port.write('0');
-    gsm_port.print((GSM_SCAN_SEQUENCE>>12) & 3);
-    gsm_port.write('0');
-    gsm_port.print((GSM_SCAN_SEQUENCE>>6) & 3);
+    if ((GSM_SCAN_SEQUENCE>>12) & 3) {
+      gsm_port.write('0');
+      gsm_port.print((GSM_SCAN_SEQUENCE>>12) & 3);
+    }
+    if ((GSM_SCAN_SEQUENCE>>6) & 3) {
+      gsm_port.write('0');
+      gsm_port.print((GSM_SCAN_SEQUENCE>>6) & 3);
+    }
     gsm_port.write('0');
     gsm_port.print(GSM_SCAN_SEQUENCE & 3);
     gsm_port.print(",1\r");
